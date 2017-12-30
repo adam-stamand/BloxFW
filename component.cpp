@@ -53,6 +53,6 @@ void Component::SetManager(EntityManager * manager){
 }
 
 
-void Component::Print(){
-  std::cout << "Component Name: " + name + "; Component ID: " + std::to_string(id) + "; ";
+std::string Component::Print(){
+  return "Component: " + name + "/" + std::to_string(id) + "; Entity: " + manager->GetEntityName(entityID) + "/" + std::to_string(entityID) + "; ";
 }

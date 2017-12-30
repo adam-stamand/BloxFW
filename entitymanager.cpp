@@ -1,4 +1,5 @@
 #include "entitymanager.h"
+#include "debug.h"
 
 MessageID EntityManager::GetMessageID(std::string message){
   auto iter = messageIDmap.find(message);
@@ -16,23 +17,34 @@ MessageID EntityManager::GetMessageID(std::string message){
 }
 
 
-void EntityManager::PublishMessage(std::string message, Message msg, EntityID id){
-  MessageID msgID = entities.at(id)->GetMessageID(message);
-  std::vector<Subscription> subs = entities.at(id)->subscriptions.at(msgID);
-  for (unsigned int i = 0; i < subs.size(); i++){
-    subs.at(i).callback(msg);
+std::string EntityManager::GetMessageName(MessageID id){
+  auto iter = messageIDmap.begin();
+  while (iter != messageIDmap.end()){
+    if (iter->second == id){
+      return iter->first;
+    }
+    iter++;
   }
+  return "";
+}
+
+void EntityManager::PublishMessage(std::string message, Message msg, EntityID id){
+  entities.at(id)->PublishMessage(message, msg);
 }
 
 
 void EntityManager::SubscribeMessage(std::string message, Subscription sub, EntityID id){
-  MessageID subID = entities.at(id)->GetMessageID(message);
-  entities.at(id)->SubscribeMessage(subID, sub);
+  entities.at(id)->SubscribeMessage(message, sub);
 }
 
 
 void EntityManager::PublishMessage(std::string message, Message msg){
   MessageID msgID = GetMessageID(message);
+  #ifdef BLOX_DEBUG
+  std::stringstream temp;
+  temp <<   "Published " + GetMessageName(msgID)  + "; "+ msg.publisher->Print() ;
+  DebugLog(BLOX_ACTIVITY, temp.str());
+  #endif
   std::vector<Subscription> subs = subscriptions.at(msgID);
   for (unsigned int i = 0; i < subs.size(); i++){
     subs.at(i).callback(msg);
@@ -41,8 +53,13 @@ void EntityManager::PublishMessage(std::string message, Message msg){
 
 
 void EntityManager::SubscribeMessage(std::string message, Subscription sub){
-  MessageID subID = GetMessageID(message);
-  subscriptions.at(subID).push_back(sub);
+  MessageID msgID = GetMessageID(message);
+  #ifdef BLOX_DEBUG
+  std::stringstream temp;
+  temp <<   "Subscribed to " + GetMessageName(msgID)  + "; "+ sub.subscriber->Print() ;
+  DebugLog(BLOX_ACTIVITY, temp.str());
+  #endif
+  subscriptions.at(msgID).push_back(sub);
 }
 
 
@@ -61,6 +78,17 @@ EntityID EntityManager::GetEntityID(std::string name){
     return iter->second;
   }
   return 0;
+}
+
+std::string EntityManager::GetEntityName(EntityID id){
+  auto iter = entityNames.begin();
+  while (iter != entityNames.end()){
+    if (iter->second == id){
+      return iter->first;
+    }
+    iter++;
+  }
+  return "";
 }
 
 void EntityManager::RemoveEntity(EntityID id){

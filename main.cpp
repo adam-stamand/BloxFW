@@ -31,7 +31,7 @@ public:
 private:
   void Control(Message const & msg){
     President * pres = (President*)msg.publisher;
-    printf("person controlled by %s\n", pres->Name.c_str());
+    //printf("person controlled by %s\n", pres->Name.c_str());
   }
 
 
@@ -53,12 +53,12 @@ public:
 private:
   void Birthday(Message const & msg){
     Person * person = (Person*)msg.publisher;
-    printf("age = %d\n", person->age);
+    //printf("age = %d\n", person->age);
   }
 
   void Control(Message const & msg){
     President * pres = (President*)msg.publisher;
-    printf("company controlled by %s\n", pres->Name.c_str());
+    //printf("company controlled by %s\n", pres->Name.c_str());
   }
 
 };
@@ -84,8 +84,6 @@ int main(void){
   jeff->test();
   bob->test();
   pres->control();
-
   manager.RemoveComponent(id, "Jeff");
 
-  puts("hello");
 }

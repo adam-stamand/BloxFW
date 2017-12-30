@@ -50,7 +50,7 @@ public:
   // Getters/Setters
   std::string GetName();
   ComponentID GetID();
-  void Print();
+  std::string Print();
 
   // Give Entity Access to private members
   friend class Entity;
@@ -62,7 +62,7 @@ private:
   void SetManager(EntityManager * manager);
 
   // Message Helper
-  void SubscribeLocalMessage(std::string message, MessageFunction function);  
+  void SubscribeLocalMessage(std::string message, MessageFunction function);
   void SubscribeGlobalMessage(std::string message, MessageFunction function);
 
   // Private members

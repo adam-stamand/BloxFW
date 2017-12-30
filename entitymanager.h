@@ -21,10 +21,12 @@ public:
   void PublishMessage(std::string message, Message msg);
   void SubscribeMessage(std::string message, Subscription sub);
   MessageID GetMessageID(std::string message);
+  std::string GetMessageName(MessageID);
   MessageID CreateMessageID(){return messageIDcounter++;}
 
   // Get ID's
   EntityID GetEntityID(std::string name);
+  std::string GetEntityName(EntityID id);
   ComponentID GetComponentID(std::string entityName, std::string compName);
   ComponentID GetComponentID(EntityID id, std::string compName);
 
