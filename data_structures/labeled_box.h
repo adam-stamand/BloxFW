@@ -70,11 +70,11 @@ ITEM labeled_box<INDEX,ITEM>::RemoveItem(INDEX itemIndex){
   for (auto iter = itemNames.begin(); iter != itemNames.end(); iter++){
     if (iter->second == itemIndex){
       itemNames.erase(iter);
-      return;
+      return items.remove(itemIndex);
     }
   }
   assert(0); //temp
-  return items.remove(itemIndex);
+  return 0; 
   // TODO handle if no item existss
 }
 

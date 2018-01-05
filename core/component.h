@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <string>
 #include <functional>
-//#include "core/message.h"
 
 namespace bx{
 
@@ -17,7 +16,7 @@ class Component;
 typedef uint32_t MessageID;
 typedef uint32_t ComponentID;
 typedef uint32_t ContainerID;
-
+typedef uint32_t SubscriptionID;
 
 struct Message{
   Component * publisher;
@@ -62,6 +61,7 @@ public:
   friend class Container; // consider friend functions
 
 private:
+  
   // Setters to be used by Entity only
   void SetContainerID(ContainerID id);
   void SetComponentID(ComponentID id);

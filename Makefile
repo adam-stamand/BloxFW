@@ -1,6 +1,7 @@
 
-CC = g++
-CCFLAGS = -std=c++11 -Wall -I $(PWD)
+CXX = g++
+CXXFLAGS = -Wall -std=c++11 $(DEBUG)
+
 src = $(wildcard *.cpp) \
 			 $(wildcard data_structures/*.cpp) \
 			 $(wildcard core/*.cpp) \
@@ -8,7 +9,7 @@ src = $(wildcard *.cpp) \
 obj = $(src:.cpp=.o)
 
 myprog: $(obj)
-	$(CC) $(CCFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 
 clean:

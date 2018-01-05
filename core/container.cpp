@@ -1,53 +1,52 @@
 #include "container.h"
 
+using namespace bx;
 
-ContainerID GetID(){return this->id;};
-std::string GetName() {return this->name;}
-std::string Print(){return "to be implemented";}
-void SetID(ContainerID id) {this->id = id;}
-void SetContainerID(ContainerID id) {this->contID = id};)
+ContainerID Container::GetID(){return this->id;};
+std::string Container::GetName() {return this->name;}
+std::string Container::Print(){return "to be implemented";}
+void Container::SetID(ContainerID id) {this->id = id;}
+void Container::SetContainerID(ContainerID id) {this->contID = id;}
 
 // Modify Entities
-ContainerID AddContainer(Container * cont){
-  cont->SetContainerID = this->GetID();
-  cont->SetManager = this->manager;
-  return containers.AddItem(cont);
+ContainerID Container::AddContainer(Container * cont){
+  return containers.AddItem(cont, cont->GetName());
 }
 
-Container * RemoveContainer(ContainerID id){
-  return container.RemoveItem(id);
+Container * Container::RemoveContainer(ContainerID id){
+  return containers.RemoveItem(id);
 }
 
-Container * RemoveContainer(std::string contName){
-  return container.RemoveItem(contName);
+Container * Container::RemoveContainer(std::string contName){
+  return containers.RemoveItem(contName);
 }
 
 
 
 // Modify Components within Entity
-void AddComponents(std::vector<Component*> comps){
+void Container::AddComponents(std::vector<Component*> comps){
   for (unsigned int i = 0; i < comps.size(); i++){
     Component * comp = comps.at(i);
-    comp->SetContainerID = this->GetID();
-    comp->SetManager = this->manager;
+    comp->SetContainerID(this->GetID());
+    comp->SetManager(this->manager);
     components.AddItem(comp, comp->GetName());
   }
 }
 
-Component * RemoveComponent(ComponentID id){
+Component * Container::RemoveComponent(ComponentID id){
   return components.RemoveItem(id);
 }
 
-Component * RemoveComponent(std::string compName){
+Component * Container::RemoveComponent(std::string compName){
   return components.RemoveItem(compName);
 }
 
 
 
 // Publishing and Subscription System for Intra Entity communication
-SubscriptionID AddSubscription(std::string message, Subscription sub){
-  std::vector<Subscription*> subs;
-  int rv = subscriptions.GetItem(message, subs);
+SubscriptionID Container::AddSubscription(std::string message, Subscription sub){
+  std::vector<Subscription> subs;
+  int rv = subscriptions.GetItem(subs, message);
   if (rv != 0){
     return subscriptions.AddItem({sub}, message);
   }
@@ -56,11 +55,11 @@ SubscriptionID AddSubscription(std::string message, Subscription sub){
 }
 
 
-unsigned int PublishMessageLocally(std::string message, Message const & msg){
-  std::vector<Subscription*> subs;
-  int rv = subscriptions.GetItem(message, subs);
+unsigned int Container::PublishMessageLocally(std::string message, Message const & msg){
+  std::vector<Subscription> subs;
+  int rv = subscriptions.GetItem(subs, message);
   if (rv != 0){
-    return 0 // No subcribers
+    return 0; // No subcribers
   }
   for (unsigned int i = 0; i < subs.size(); i++){
     subs.at(i).callback(msg);

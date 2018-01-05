@@ -21,7 +21,7 @@ public:
   // Modify Containers
   template <typename T>
   ContainerID CreateContainer(std::string newContainer, T parent);
-  ContainerID CreateContainer(std::string newContainer) {CreateContainer(newContainer, this->GetID());}
+  ContainerID CreateContainer(std::string newContainer) {return CreateContainer(newContainer, this->GetID());}
 
   template <typename T1, typename T2>
   void DestroyContainer(T1 newContainer, T2 parentContainer);

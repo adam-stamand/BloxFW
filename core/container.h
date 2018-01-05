@@ -10,7 +10,7 @@
 
 namespace bx{
 
-typedef uint32_t SubsriptionID;
+
 
 struct Subscription{
   Component * subscriber;
