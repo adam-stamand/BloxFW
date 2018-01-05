@@ -14,7 +14,7 @@ public:
   void AddedToContainer(){};
 
   void control(){PublishMessageToContainer("Control", "cont1");}
-  std::string Name = "PRESIDENTE";
+  std::string name = "PRESIDENTE";
 };
 
 
@@ -27,7 +27,7 @@ public:
   void test(){PublishMessageToContainer("Birthday", "cont1" );}
 
   void AddedToContainer(){
-    SubscribeToContainerMessage("Control", &Person::Control, "cont1");
+    SubscribeToContainerMessage(&Person::Control, "Control", "cont1");
   }
 
 private:
@@ -35,8 +35,6 @@ private:
     President * pres = (President*)msg.publisher;
     printf("person controlled by %s\n", pres->Name.c_str());
   }
-
-
 };
 
 class Company : public Component
@@ -47,8 +45,8 @@ public:
   ~Company(){}
 
  void AddedToContainer(){
-   SubscribeToContainerMessage("Birthday", &Company::Birthday, "cont1");
-   SubscribeToContainerMessage("Control", &Company::Control, "cont1");
+   SubscribeToContainerMessage(&Company::Birthday,"Birthday",  "cont1");
+   SubscribeToContainerMessage(&Company::Control,"Control",  "cont1");
  }
 
 

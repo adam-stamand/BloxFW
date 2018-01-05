@@ -15,8 +15,6 @@ class Manager;
 
 
 
-
-
 class Component
 {
 

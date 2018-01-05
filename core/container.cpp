@@ -2,25 +2,61 @@
 
 using namespace bx;
 
-ContainerID Container::GetID(){return this->id;};
-std::string Container::GetName() {return this->name;}
-std::string Container::Print(){return "to be implemented";}
-void Container::SetID(ContainerID id) {this->id = id;}
-void Container::SetContainerID(ContainerID id) {this->contID = id;}
+
+ContainerID Container::GetID(){
+  return this->id;
+}
+
+
+ContainerID Container::GetParentID(){
+  return this->parentID;
+}
+
+
+std::string Container::GetName() {
+  return this->name;
+}
+
+
+Manager * Container::GetManager(){
+  return this->manager;
+}
+
+
+std::string Container::Print(){
+  return "to be implemented";
+}
+
+
+void Container::SetID(ContainerID id) {
+  this->id = id;
+}
+
+
+void Container::SetParentID(ContainerID id) {
+  this->contID = parentiD;
+}
+
+
+void Container::SetManager(Manager * manager) {
+  this->manager = manager;
+}
+
 
 // Modify Entities
 ContainerID Container::AddContainer(Container * cont){
-  return containers.AddItem(cont, cont->GetName());
+  return containers.add(cont, cont->GetName());
 }
+
 
 Container * Container::RemoveContainer(ContainerID id){
   return containers.RemoveItem(id);
 }
 
+
 Container * Container::RemoveContainer(std::string contName){
   return containers.RemoveItem(contName);
 }
-
 
 
 // Modify Components within Entity
@@ -33,36 +69,12 @@ void Container::AddComponents(std::vector<Component*> comps){
   }
 }
 
-Component * Container::RemoveComponent(ComponentID id){
-  return components.RemoveItem(id);
+
+Component * Container::RemoveComponent(ComponentID compID){
+  return components.RemoveItem(compID);
 }
+
 
 Component * Container::RemoveComponent(std::string compName){
   return components.RemoveItem(compName);
-}
-
-
-
-// Publishing and Subscription System for Intra Entity communication
-SubscriptionID Container::AddSubscription(std::string message, Subscription sub){
-  std::vector<Subscription> subs;
-  int rv = subscriptions.GetItem(subs, message);
-  if (rv != 0){
-    return subscriptions.AddItem({sub}, message);
-  }
-  subs.push_back(sub);
-  return 0; //TODO fix
-}
-
-
-unsigned int Container::PublishMessageLocally(std::string message, Message const & msg){
-  std::vector<Subscription> subs;
-  int rv = subscriptions.GetItem(subs, message);
-  if (rv != 0){
-    return 0; // No subcribers
-  }
-  for (unsigned int i = 0; i < subs.size(); i++){
-    subs.at(i).callback(msg);
-  }
-  return subs.size(); //TODO fix
 }

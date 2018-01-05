@@ -16,8 +16,8 @@ public:
   INDEX add(ITEM &item, std::string itemName);
   ITEM remove(std::string itemName);
   ITEM remove(INDEX itemIndex);
-  int at(ITEM &item, std::string itemName);
-  int at(ITEM &item, INDEX itemIndex);
+  INDEX at(ITEM &item, std::string itemName);
+  INDEX at(ITEM &item, INDEX itemIndex);
   size_t size(){return box.size()};
 
 private:
@@ -35,32 +35,34 @@ private:
 
 
 
-
-
-
 template <typename INDEX, typename ITEM>
-int labeled_box<INDEX,ITEM>::at(ITEM &item, std::string itemName){
+INDEX labeled_box<INDEX,ITEM>::at(ITEM &item, std::string itemName){
   auto iter = itemNames.find(itemName);
   if (iter != itemNames.end()){
     item = items.at(iter->second);
-    return 0;
+    return iter->first;
   }
-  return -1;
-}
-
-
-template <typename INDEX, typename ITEM>
-int labeled_box<INDEX,ITEM>::at(ITEM &item, INDEX itemIndex){
-  item = items.at(itemIndex);
   return 0;
 }
 
 
 template <typename INDEX, typename ITEM>
-INDEX labeled_box<INDEX,ITEM>::add(ITEM &item, std::string name){
-  INDEX index = items.add(item);
-  itemNames.insert(std::pair<std::string,INDEX>(name, index));
-  return index;
+INDEX labeled_box<INDEX,ITEM>::at(ITEM &item, INDEX itemIndex){
+  item = items.at(itemIndex); // consider doing a check to and return 0 if not valid
+  return itemIndex;
+}
+
+
+template <typename INDEX, typename ITEM>
+INDEX labeled_box<INDEX,ITEM>::add(ITEM &item, std::string itemName){
+  auto iter = itemNames.find(itemName);
+  if (iter == itemNames.end()){ //name hasn't been used yet
+    INDEX index = items.add(item);
+    itemNames.insert(std::pair<std::string,INDEX>(name, index));
+    return index;
+  }
+  // name already in use
+  return 0;
 }
 
 
