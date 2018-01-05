@@ -1,5 +1,7 @@
-#include "entitymanager.h"
+#include "core/containermanager.h"
 #include <stdio.h>
+
+using namespace bx;
 
 
 class President : public Component
@@ -9,9 +11,9 @@ public:
   }
   ~President(){}
 
-  void AddedToEntity(){};
+  void AddedToContainer(){};
 
-  void control(){PublishGlobalMessage("Control");}
+  void control(){PublishMessageToContainer("Control", "cont1");}
   std::string Name = "PRESIDENTE";
 };
 
@@ -22,16 +24,16 @@ public:
   Person(std::string name):Component(name){}
   ~Person(){}
   int age = 30;
-  void test(){PublishLocalMessage("Birthday");}
+  void test(){PublishMessageToContainer("Birthday", "cont1" );}
 
-  void AddedToEntity(){
-    SubscribeGlobalMessage("Control", &Person::Control);
+  void AddedToContainer(){
+    SubscribeToContainerMessage("Control", &Person::Control, "cont1");
   }
 
 private:
   void Control(Message const & msg){
     President * pres = (President*)msg.publisher;
-    //printf("person controlled by %s\n", pres->Name.c_str());
+    printf("person controlled by %s\n", pres->Name.c_str());
   }
 
 
@@ -44,21 +46,21 @@ public:
   }
   ~Company(){}
 
- void AddedToEntity(){
-   SubscribeLocalMessage("Birthday", &Company::Birthday);
-   SubscribeGlobalMessage("Control", &Company::Control);
+ void AddedToContainer(){
+   SubscribeToContainerMessage("Birthday", &Company::Birthday, "cont1");
+   SubscribeToContainerMessage("Control", &Company::Control, "cont1");
  }
 
 
 private:
   void Birthday(Message const & msg){
     Person * person = (Person*)msg.publisher;
-    //printf("age = %d\n", person->age);
+    printf("age = %d\n", person->age);
   }
 
   void Control(Message const & msg){
     President * pres = (President*)msg.publisher;
-    //printf("company controlled by %s\n", pres->Name.c_str());
+    printf("company controlled by %s\n", pres->Name.c_str());
   }
 
 };
@@ -73,17 +75,17 @@ int main(void){
   President * pres = new President("Jerry");
   bob->age = 20;
 
-  EntityManager manager;
+  ContainerManager manager("Manager");
 
-  EntityID id = manager.CreateEntity("entity1");
-  manager.AddComponents(id, {jeff, intel});
+  ContainerID id = manager.CreateContainer("cont1");
+  manager.InsertComponents({jeff, hp}, "cont1");
 
-  id = manager.CreateEntity("entity2");
-  manager.AddComponents(id, {hp, bob, pres});
+  //id = manager.CreateContainer("cont2");
+  //manager.InsertComponents({hp, bob, pres}, "cont2");
 
   jeff->test();
   bob->test();
   pres->control();
-  manager.RemoveComponent(id, "Jeff");
+  //manager.RemoveComponent(id, "Jeff");
 
 }
