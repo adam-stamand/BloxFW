@@ -5,89 +5,94 @@
 #include <stdint.h>
 #include <string>
 #include <functional>
+#include "types.h"
+
+
 
 namespace bx{
 
-class ContainerManager;
-class Component;
+class Manager;
 
 
-
-typedef uint32_t MessageID;
-typedef uint32_t ComponentID;
-typedef uint32_t ContainerID;
-typedef uint32_t SubscriptionID;
-
-struct Message{
-  Component * publisher;
-  void * params;
-};
-typedef std::function<void(Message const &)> MessageFunction;
 
 
 
 class Component
 {
 
-
 public:
-
-
-
-
-
-
-
   // Must give Component Name upon instantiation
-  Component(std::string name) : name(name){}
+  Component(std::string compName) : name(compName){}
   // Allow destructor to be overriden
   virtual ~Component(){};
 
   virtual void AddedToContainer() = 0;
 
-  // Subscription and Publishing System
-  template <class T>
-  void SubscribeToContainerMessage(std::string message, void (T::*f)(Message const &), std::string containerName);
-  void PublishMessageToContainer(std::string message, std::string containerName);
-  //void SubscribeToLocalMessage(std::string message, void (T::*f)(Message const &));
-  //void PublishLocalMessage(std::string message);
-
-  // Getters/Setters
-  std::string GetName();
+  // Getters
   ComponentID GetID();
+  std::string GetName();
+  ContainerID GetID();
+  ContianerManager * GetManager();
   std::string Print(); // for debug
 
   // Give Entity Access to private members
   friend class Container; // consider friend functions
 
-private:
-  
-  // Setters to be used by Entity only
-  void SetContainerID(ContainerID id);
-  void SetComponentID(ComponentID id);
-  void SetManager(ContainerManager * manager);
 
-  // Message Helper
-  //void SubscribeLocalMessage(std::string message, MessageFunction function);
-  void SubscribeToContainerMessage(std::string message, MessageFunction function, std::string containerName);
-  //void SubscribeToMessage(std::string message, MessageFunction function);
+  // Subscription and Publishing System
+  template <class T1 class T2, class T3>
+  void SubscribeToContainerMessage(void (T1::*f)(Message const &), T2 msgIdentifier, T3 contIdentifier);
+  template <class T1 class T2>
+  void SubscribeToContainerMessage(void (T1::*f)(Message const &), T2 msgIdentifier) {SubscribeToContainerMessage(f, msgIdentifier, this->GetContainerID());}
+
+  template <class T1, class T2>
+  void PublishMessageToContainer(T1 msgIdentifier, T2 contIdentifier);
+  template <class T>
+  void PublishMessageToContainer(T msgIdentifier){PublishMessageToContainer(msgIdentifier, this->GetContainerID());}
+
+
+private:
+  // Message Helpers
+  void SubscribeHelper(Subscription sub, std::string msgIdentifier, std::string contIdentifier);
+  void SubscribeHelper(Subscription sub, MessageID msgIdentifier, std::string contIdentifier);
+  void SubscribeHelper(Subscription sub, std::string msgIdentifier, ContainerID contIdentifier);
+  void SubscribeHelper(Subscription sub, MessageID msgIdentifier, ContainerID contIdentifier);
+
+
+  void PublishHelper(std::string msgIdentifier, std::string contIdentifier);
+  void PublishHelper(MessageID msgIdentifier, std::string contIdentifier);
+  void PublishHelper(std::string msgIdentifier, ContainerID contIdentifier);
+  void PublishHelper(MessageID msgIdentifier, ContainerID contIdentifier);
+
+  // Setters to be used by Container only
+  void SetComponentID(ComponentID compID);
+  void SetContainerID(ContainerID contID);
+  void SetManager(Manager * manager);
 
   // Private members
   ComponentID id;
-  ContainerID contID = 0;
+  ContainerID parentID = 0;
+  Manager * manager = NULL;
   const std::string name;
-  ContainerManager * manager = NULL;
 };
 
-// Template Interface Method
-//template <class T>
-//void Component::SubscribeToLocalMessage(std::string message, void (T::*f)(Message const &)){
-//  SubscribeToMessage(message, std::bind(f, (T*)(this), std::placeholders::_1));
-//}
-// Template Interface Method
-template <class T>
-void Component::SubscribeToContainerMessage(std::string message, void (T::*f)(Message const &), std::string containerName){
-  SubscribeToContainerMessage(message, std::bind(f, (T*)(this), std::placeholders::_1), containerName);
+
+
+template <class T1 class T2, class T3>
+void SubscribeToContainerMessage(void (T1::*f)(Message const &), T2 msgIdentifier, T3 contIdentifier){
+  MessageFunction function = std::bind(f, (T*)(this), std::placeholders::_1);
+  Subscription sub;
+  sub.subscriber = this;
+  sub.callback = function;
+  SubscribeHelper(sub, msgIdentifier, contIdentifier);
+}
+
+
+template <class T1, class T2>
+void PublishMessageToContainer(T1 msgIdentifier, T2 contIdentifier){
+  Message msg;
+  msg.publisher = this;
+  PublishHelper(message, msgIdentifier, contIdentifier);
 }
 
 

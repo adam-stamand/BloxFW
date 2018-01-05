@@ -1,5 +1,5 @@
-#ifndef CONTAINERMANAGER_H
-#define CONTAINERMANAGER_H
+#ifndef Manager_H
+#define Manager_H
 
 #include "container.h"
 #include "component.h"
@@ -10,13 +10,13 @@ namespace bx{
 
 
 
-class ContainerManager : public Container
+class Manager : public Container
 {
 public:
-  ContainerManager(std::string contName) : Container (contName, this){
+  Manager(std::string contName) : Container (contName, this){
     managedContainers.AddItem(this, contName); // Manager manages itself as well
   }
-  ~ContainerManager(){}
+  ~Manager(){}
 
   // Modify Containers
   template <typename T>
@@ -66,7 +66,7 @@ private:
 
 
 template <typename T>
-ContainerID ContainerManager::CreateContainer(std::string newContName, T parent){
+ContainerID Manager::CreateContainer(std::string newContName, T parent){
   // Get reference to parent and new containers
   Container * parentCont;
   Container * newCont = new Container(newContName, this);
@@ -84,7 +84,7 @@ ContainerID ContainerManager::CreateContainer(std::string newContName, T parent)
 
 
 template <typename T1, typename T2>
-void ContainerManager::DestroyContainer(T1 container, T2 parent){
+void Manager::DestroyContainer(T1 container, T2 parent){
   // Get reference to parent
   Container* parentCont;
   int rv = this->managedContainers.GetItem(parentCont, parent);
@@ -98,7 +98,7 @@ void ContainerManager::DestroyContainer(T1 container, T2 parent){
 
 
 template <typename T>
-void ContainerManager::Subscribe(std::string subName, Subscription sub, T container){
+void Manager::Subscribe(std::string subName, Subscription sub, T container){
   Container * cont;
   int rv = this->managedContainers.GetItem(cont, container);
   if (rv != 0) assert(0);
@@ -107,7 +107,7 @@ void ContainerManager::Subscribe(std::string subName, Subscription sub, T contai
 
 
 template <typename T>
-void ContainerManager::Publish(std::string subName, Message const & msg, T container){
+void Manager::Publish(std::string subName, Message const & msg, T container){
   Container * cont;
   int rv = this->managedContainers.GetItem(cont, container);
   if (rv != 0) assert(0);
@@ -117,7 +117,7 @@ void ContainerManager::Publish(std::string subName, Message const & msg, T conta
 
 
 template <typename T>
-void ContainerManager::InsertComponents(std::vector<Component*> comps, T container){
+void Manager::InsertComponents(std::vector<Component*> comps, T container){
   Container* cont;
   int rv = this->managedContainers.GetItem(cont, container);
   if (rv != 0) assert(0);
@@ -126,7 +126,7 @@ void ContainerManager::InsertComponents(std::vector<Component*> comps, T contain
 
 
 template <typename T1, typename T2>
-void ContainerManager::EraseComponent(T1 component, T2 container){
+void Manager::EraseComponent(T1 component, T2 container){
   Container * parentCont;
   int rv = this->managedContainers.GetItem(parentCont, container);
   if (rv != 0) assert(0);

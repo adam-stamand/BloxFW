@@ -1,45 +1,82 @@
 #include "component.h"
-#include "containermanager.h"
+#include "Manager.h"
 #include <stdio.h>
 #include <iostream>
 
 
 using namespace bx;
 
-void Component::SubscribeToContainerMessage(std::string message, MessageFunction function, std::string contName){
-  Subscription sub;
-  sub.subscriber = this;
-  sub.callback = function;
-  manager->Subscribe(message, sub, contName);
+
+ComponentID Component::GetComponentID(){
+  return this->compID;
 }
 
 
-void Component::PublishMessageToContainer(std::string message, std::string contName){
-  Message msg;
-  msg.publisher = this;
-  manager->Publish(message, msg, contName);
+ComponentID Component::GetContainerID(){
+  return this->contID;
 }
 
 
-std::string Component::GetName(){
-  return name;
+Manager * Component::GetManager (){
+  return this->manager;
 }
 
 
-void Component::SetContainerID(ContainerID id){
-  this->contID = id;
-}
-
-
-void Component::SetComponentID(ComponentID id){
-  this->id = id;
-}
-
-void Component::SetManager(ContainerManager * manager){
-  this->manager = manager;
+std::string Component::GetComponentName(){
+  return this->compName;
 }
 
 
 std::string Component::Print(){
   return "Component: " + name + "/" + std::to_string(id) + "; Container: "  + "/" + std::to_string(contID) + "; ";
+}
+
+
+void Component::SetComponentID(ComponentID compID){
+  this->compID = compID;
+}
+
+
+void Component::SetContainerID(ContainerID contID){
+  this->contID = contID;
+}
+
+
+void Component::SetManager(Manager * manager){
+  this->manager = manager;
+}
+
+
+void Component::SubscribeHelper(){
+  manager->Subscribe(message, sub, contName);
+}
+
+void SubscribeHelper(Subscription sub, std::string msgIdentifier, std::string contIdentifier){
+  manager->Subscribe(sub, msgIdentifier, contIdentifier);
+}
+
+void SubscribeHelper(Subscription sub, MessageID msgIdentifier, std::string contIdentifier){
+  manager->Subscribe(sub, msgIdentifier, contIdentifier);
+}
+
+void SubscribeHelper(Subscription sub, std::string msgIdentifier, ContainerID contIdentifier){
+  manager->Subscribe(sub, msgIdentifier, contIdentifier);
+}
+
+void SubscribeHelper(Subscription sub, MessageID msgIdentifier, ContainerID contIdentifier){
+  manager->Subscribe(sub, msgIdentifier, contIdentifier);
+}
+
+
+void PublishHelper(std::string msgIdentifier, std::string contIdentifier){
+  manager->Publish(msgIdentifier, contIdentifier);
+}
+void PublishHelper(MessageID msgIdentifier, std::string contIdentifier){
+  manager->Publish(msgIdentifier, contIdentifier);
+}
+void PublishHelper(std::string msgIdentifier, ContainerID contIdentifier){
+  manager->Publish(msgIdentifier, contIdentifier);
+}
+void PublishHelper(MessageID msgIdentifier, ContainerID contIdentifier){
+  manager->Publish(msgIdentifier, contIdentifier);
 }

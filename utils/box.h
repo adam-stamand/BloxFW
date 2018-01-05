@@ -15,10 +15,10 @@ public:
   box(){}
   ~box(){}
 
-  INDEX add(ELEMENT element);
+  INDEX   add(ELEMENT &element);
   ELEMENT remove(INDEX index);
-  size_t size();
   ELEMENT at(INDEX index);
+  size_t  size();
 
 private:
   size_t m_size = 0;
@@ -45,7 +45,7 @@ private:
 
 
 template <typename INDEX, typename ELEMENT>
-INDEX box<INDEX,ELEMENT>::add(ELEMENT element){
+INDEX box<INDEX,ELEMENT>::add(ELEMENT &element){
   INDEX index;
   if (vacancies.size() > 0){ // Fill in vacancy if one exists
     index = vacancies.at(0);
