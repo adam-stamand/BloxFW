@@ -10,6 +10,6 @@ obj = $(src:.cpp=.o)
 myprog: $(obj)
 	$(CC) $(CCFLAGS) -o $@ $^ $(LDFLAGS)
 
-.PHONY: clean
+
 clean:
 	rm -f $(obj) myprog

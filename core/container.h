@@ -10,6 +10,8 @@
 
 namespace bx{
 
+typedef uint32_t SubsriptionID;
+
 struct Subscription{
   Component * subscriber;
   MessageFunction callback;
@@ -32,32 +34,31 @@ public:
   ContainerID GetID();
   std::string GetName();
   std::string Print(); // for debug
+  void SetID(ContainerID id);
+  void SetContainerID(ContainerID id);
 
   // Modify Entities
   ContainerID AddContainer(Container * cont);
 
-  //void RemoveContainer(ContainerID id);
+  Container * RemoveContainer(ContainerID id);
   Container * RemoveContainer(std::string contName);
 
   // Modify Components within Entity
   void AddComponents(std::vector<Component*> comps);
 
-  //void RemoveComponent(ComponentID);
+  Component * RemoveComponent(ComponentID id);
   Component * RemoveComponent(std::string compName);
 
-
-
   // Publishing and Subscription System for Intra Entity communication
-  void AddSubscription(std::string message, Subscription sub);
-  void PublishMessageLocally(std::string message, Message const & msg);
-  //void PublishMessageRecursively(std::string message, Message const & msg);
-  void SetID(ContainerID id) {this->id = id;}
+  SubscriptionID AddSubscription(std::string message, Subscription sub);
+  unsigned int PublishMessageLocally(std::string message, Message const & msg);
 
 private:
 
   // Private Members
   ContainerManager * manager = NULL;
   ContainerID id;
+  ContainerID contID;
   const std::string name;
 
   labeled_box<MessageID,std::vector<Subscription>> subscriptions;
