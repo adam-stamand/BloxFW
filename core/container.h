@@ -7,8 +7,9 @@
 #include "component.h"
 #include <assert.h>
 
-#include "types.h"
-#include "../data_structures/labeled_box.h"
+#include "../utils/types.h"
+#include "../utils/labeled_box.h"
+#include "../tools/debug.h"
 
 namespace bx{
 
@@ -26,43 +27,48 @@ public:
   //ComponentID GetComponentID(std::string name);
   ContainerID GetID();
   std::string GetName();
-  ContainerID GetParentID(std::string name);
+  ContainerID GetParentID();
   Manager *   GetManager();
   std::string Print(); // for debug
 
   // Allow acces to private setters // TODO change to friend functions
   friend class Manager;
+  friend class Container;
 
+
+
+private:
   // Modify Containers
   ContainerID AddContainer(Container * cont);
-  Container * RemoveContainer(ContainerID contID);
+  Container * GetContainer(ContainerID contID);
+  Container * GetContainer(std::string contName);
+  Container * RemoveContainer(ContainerID contID); // make templates out of these
   Container * RemoveContainer(std::string contName);
 
   // Modify Components within Container
   void AddComponents(std::vector<Component*> comps);
+  Component * GetComponent(ComponentID compID);
+  Component * GetComponent(std::string compName);
   Component * RemoveComponent(ComponentID compID);
   Component * RemoveComponent(std::string compName);
 
   // Publishing and Subscription System for Intra Entity communication
   template <typename T>
-  SubscriptionID AddSubscription(Subscription sub, std::string msgName);
+  SubscriptionID AddSubscription(Subscription sub, T msgName);
   template <typename T>
   SubscriptionID PublishMessageLocally(Message const & msg, T msgIdentifier);
   template <typename T>
   SubscriptionID PublishMessageRecursively(Message const & msg, T msgIdentifier);
 
-
-private:
-
   // Setters to be used by Entity only
   void SetID(ComponentID compID);
   void SetParentID(ContainerID contID);
-  void SetManager(Manager * manager);
+  void SetManager(Manager * manager); // consider passing in as initialization argument
 
   // Private Members
   Manager * manager = NULL;
-  ContainerID id;
-  ContainerID parentID;
+  ContainerID id = 0;
+  ContainerID parentID = 0;
   const std::string name;
 
   labeled_box<MessageID,std::vector<Subscription>> subscriptions;
@@ -73,9 +79,9 @@ private:
 
 
 template <typename T>
-SubscriptionID PublishMessageLocally(Message const & msg, T msgIdentifier){
+SubscriptionID Container::PublishMessageLocally(Message const & msg, T subIdentifier){
   std::vector<Subscription> subs;
-  SubscriptionID subID = subscriptions.GetItem(subs, msgIdentifier);
+  SubscriptionID subID = subscriptions.at(subs, subIdentifier);
   if (subID != 0){
     for (unsigned int i = 0; i < subs.size(); i++){
       subs.at(i).callback(msg);
@@ -86,17 +92,17 @@ SubscriptionID PublishMessageLocally(Message const & msg, T msgIdentifier){
 
 
 template <typename T>
-SubscriptionID PublishMessageRecursively(Message const & msg, T msgIdentifier){
+SubscriptionID Container::PublishMessageRecursively(Message const & msg, T subIdentifier){
   // Not implemented yet
 }
 
 // Publishing and Subscription System for Intra Entity communication
 template <typename T>
-SubscriptionID Container::AddSubscription(Subscription sub, T msgIdentifier){
+SubscriptionID Container::AddSubscription(Subscription sub, T subIdentifier){
   std::vector<Subscription> subs;
-  SubscriptionID subID = subscriptions.at(subs, msgIdentifier);
+  SubscriptionID subID = subscriptions.at(subs, subIdentifier);
   if (subID == 0){
-    subID = subscriptions.add({sub}, msgName);
+    subID = subscriptions.add({sub}, subIdentifier);
   } else{
     subs.push_back(sub);
   }

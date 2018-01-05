@@ -1,6 +1,8 @@
 #include "debug.h"
 #include <iostream>
 
+using namespace bx;
+
 
 void DebugLog(DebugLevel lvl, std::string message){
   switch(lvl){

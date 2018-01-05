@@ -4,6 +4,8 @@
 
 #include <sstream>
 
+namespace bx{
+
 #define BLOX_DEBUG
 
 enum DebugLevel{
@@ -13,5 +15,6 @@ enum DebugLevel{
 
 void DebugLog(DebugLevel lvl, std::string message);
 
+}
 
 #endif

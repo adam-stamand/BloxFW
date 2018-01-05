@@ -8,17 +8,21 @@
 namespace bx{
 
 
+#define RETURN_INDEX(x) (x + 1)
+#define USE_INDEX(x) (x - 1)
+
 template <typename INDEX, typename ITEM>
 class labeled_box
 {
 public:
 
-  INDEX add(ITEM &item, std::string itemName);
+  INDEX add(ITEM item, std::string itemName);
+  INDEX add(ITEM item, INDEX itemIndex);
   ITEM remove(std::string itemName);
   ITEM remove(INDEX itemIndex);
   INDEX at(ITEM &item, std::string itemName);
   INDEX at(ITEM &item, INDEX itemIndex);
-  size_t size(){return box.size()};
+  size_t size(){return items.size();}
 
 private:
   std::map<std::string, INDEX> itemNames;
@@ -40,7 +44,7 @@ INDEX labeled_box<INDEX,ITEM>::at(ITEM &item, std::string itemName){
   auto iter = itemNames.find(itemName);
   if (iter != itemNames.end()){
     item = items.at(iter->second);
-    return iter->first;
+    return RETURN_INDEX(iter->second);
   }
   return 0;
 }
@@ -48,22 +52,29 @@ INDEX labeled_box<INDEX,ITEM>::at(ITEM &item, std::string itemName){
 
 template <typename INDEX, typename ITEM>
 INDEX labeled_box<INDEX,ITEM>::at(ITEM &item, INDEX itemIndex){
-  item = items.at(itemIndex); // consider doing a check to and return 0 if not valid
+  item = items.at(USE_INDEX(itemIndex)); // consider doing a check to and return 0 if not valid
   return itemIndex;
 }
 
 
 template <typename INDEX, typename ITEM>
-INDEX labeled_box<INDEX,ITEM>::add(ITEM &item, std::string itemName){
+INDEX labeled_box<INDEX,ITEM>::add(ITEM item, std::string itemName){
   auto iter = itemNames.find(itemName);
   if (iter == itemNames.end()){ //name hasn't been used yet
     INDEX index = items.add(item);
-    itemNames.insert(std::pair<std::string,INDEX>(name, index));
-    return index;
+    itemNames.insert(std::pair<std::string,INDEX>(itemName, index));
+    return RETURN_INDEX(index);
   }
   // name already in use
   return 0;
 }
+
+template <typename INDEX, typename ITEM>
+INDEX labeled_box<INDEX,ITEM>::add(ITEM item, INDEX itemIndex){
+  return 0; // needs to be fixed TODO
+}
+
+
 
 
 template <typename INDEX, typename ITEM>

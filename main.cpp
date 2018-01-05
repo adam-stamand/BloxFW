@@ -1,4 +1,4 @@
-#include "core/containermanager.h"
+#include "core/manager.h"
 #include <stdio.h>
 
 using namespace bx;
@@ -14,7 +14,7 @@ public:
   void AddedToContainer(){};
 
   void control(){PublishMessageToContainer("Control", "cont1");}
-  std::string name = "PRESIDENTE";
+  std::string Name = "PRESIDENTE";
 };
 
 
@@ -73,17 +73,17 @@ int main(void){
   President * pres = new President("Jerry");
   bob->age = 20;
 
-  ContainerManager manager("Manager");
+  Manager manager("Manager");
 
   ContainerID id = manager.CreateContainer("cont1");
   manager.InsertComponents({jeff, hp}, "cont1");
-
-  //id = manager.CreateContainer("cont2");
-  //manager.InsertComponents({hp, bob, pres}, "cont2");
+  manager.InsertComponents({intel}, "cont1");
+  id = manager.CreateContainer("cont2");
+  manager.InsertComponents({hp, bob, pres}, "cont2");
 
   jeff->test();
   bob->test();
   pres->control();
-  //manager.RemoveComponent(id, "Jeff");
+  manager.EraseComponent("Jeff", "cont1");
 
 }

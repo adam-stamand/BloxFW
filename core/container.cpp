@@ -1,4 +1,5 @@
 #include "container.h"
+#include "manager.h"
 
 using namespace bx;
 
@@ -24,38 +25,68 @@ Manager * Container::GetManager(){
 
 
 std::string Container::Print(){
-  return "to be implemented";
+  return "Container: " + this->GetName() + "/" + std::to_string(this->GetID())   + \
+  "; Parent Container: " + manager->GetContainer(this->GetParentID())->GetName() + \
+  "/" + std::to_string(this->GetParentID()) + "; ";
 }
 
 
-void Container::SetID(ContainerID id) {
-  this->id = id;
+void Container::SetID(ContainerID contID) {
+  assert(contID != 0);
+  this->id = contID;
 }
 
 
-void Container::SetParentID(ContainerID id) {
-  this->contID = parentiD;
+void Container::SetParentID(ContainerID contID) {
+  assert(contID != 0);
+  this->parentID = contID;
 }
 
 
 void Container::SetManager(Manager * manager) {
+  assert(manager != NULL);
   this->manager = manager;
 }
 
 
 // Modify Entities
 ContainerID Container::AddContainer(Container * cont){
-  return containers.add(cont, cont->GetName());
+  assert(cont != NULL);
+  #ifdef BLOX_DEBUG
+  puts("SDFSDFSD");
+  #endif
+  cont->SetParentID(this->GetID());
+  cont->SetManager(this->manager);
+  ContainerID contID = containers.add(cont, cont->GetName());
+  cont->SetID(contID);
+  #ifdef BLOX_DEBUG
+  DebugLog(BLOX_ACTIVITY, "Container Added - " + cont->Print());
+  #endif
+  return contID;
+}
+
+Container * Container::GetContainer(ContainerID contID){
+  assert(contID != 0);
+  Container * cont = NULL;
+  this->containers.at(cont, contID);
+  return cont;
+}
+
+Container * Container::GetContainer(std::string contName){
+  Container * cont = NULL;
+  this->containers.at(cont, contName);
+  return cont;
 }
 
 
-Container * Container::RemoveContainer(ContainerID id){
-  return containers.RemoveItem(id);
+Container * Container::RemoveContainer(ContainerID contID){
+  assert(contID != 0);
+  return containers.remove(contID);
 }
 
 
 Container * Container::RemoveContainer(std::string contName){
-  return containers.RemoveItem(contName);
+  return containers.remove(contName);
 }
 
 
@@ -63,18 +94,36 @@ Container * Container::RemoveContainer(std::string contName){
 void Container::AddComponents(std::vector<Component*> comps){
   for (unsigned int i = 0; i < comps.size(); i++){
     Component * comp = comps.at(i);
-    comp->SetContainerID(this->GetID());
+    assert(comp != NULL);
+    comp->SetParentID(this->GetID());
     comp->SetManager(this->manager);
-    components.AddItem(comp, comp->GetName());
+    ComponentID compID = components.add(comp, comp->GetName());
+    comp->SetID(compID);
+    comp->AddedToContainer();
   }
 }
 
 
+
+Component * Container::GetComponent(ComponentID compID){
+  Component * comp = NULL;
+  this->components.at(comp, compID);
+  return comp;
+}
+
+Component * Container::GetComponent(std::string compName){
+  Component * comp = NULL;
+  this->components.at(comp, compName);
+  return comp;
+}
+
+
 Component * Container::RemoveComponent(ComponentID compID){
-  return components.RemoveItem(compID);
+  assert(compID != 0);
+  return components.remove(compID);
 }
 
 
 Component * Container::RemoveComponent(std::string compName){
-  return components.RemoveItem(compName);
+  return components.remove(compName);
 }
