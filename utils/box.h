@@ -52,7 +52,7 @@ INDEX box<INDEX,ELEMENT>::add(ELEMENT &element){
     vacancies.pop_front();
   }else{
     index = vec.size();
-    vec.at(index) = boxElem;
+    vec.push_back(boxElem);
   }
   return index;
 }

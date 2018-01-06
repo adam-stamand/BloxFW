@@ -38,13 +38,11 @@ std::string Component::Print(){
 
 
 void Component::SetID(ComponentID compID){
-  assert(compID != 0);
   this->id = compID;
 }
 
 
 void Component::SetParentID(ContainerID contID){
-  assert(contID != 0);
   this->parentID = contID;
 }
 

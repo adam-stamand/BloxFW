@@ -69,11 +69,10 @@ private:
   void SetInit(bool state);
 
   // Private members
-  bool initialized = false;
-  ComponentID id = 0;
-  ContainerID parentID = 0;
-  Manager * manager = NULL;
-  const std::string name;
+  bool initialized    = false;
+  Container * parent  = 0;
+  Manager * manager   = NULL;
+  const std::string   name;
 };
 
 

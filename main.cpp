@@ -116,8 +116,8 @@ int main(void){
   Entity * character = new Entity("Character");
 
   Manager manager("manager");
-  character->AddComponents({physics, controls, state});
   manager.AddContainer(character);
+  character->AddComponents({physics, controls, state});
 
 
 

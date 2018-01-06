@@ -19,6 +19,7 @@ public:
     this->SetID(managedContainers.add(this, contName)); // Manager manages itself as well
     this->SetParentID(this->GetID());
     this->manager = this;
+    this->SetInit(true);
     #ifdef BLOX_DEBUG
     DebugLog(BLOX_ACTIVITY, "Manager Created", contName + "/" + std::to_string(this->GetID()));
     #endif
