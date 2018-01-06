@@ -28,6 +28,10 @@ std::string Component::GetName(){
 
 
 std::string Component::Print(){
+  if (manager == NULL){
+    puts("Failed print: null manager");
+    return "";
+  }
   return "Component: " + this->GetName() + "/" + std::to_string(this->GetID()) + "; Container: " + \
   manager->GetContainer(this->GetParentID())->GetName() + "/" + std::to_string(this->GetParentID()) + "; ";
 }
@@ -50,6 +54,9 @@ void Component::SetManager(Manager * manager){
   this->manager = manager;
 }
 
+void Component::SetInit(bool state){
+  this->initialized = state;
+}
 
 void Component::SubscribeHelper(Subscription sub, std::string msgIdentifier, std::string contIdentifier){
   manager->Subscribe(sub, msgIdentifier, contIdentifier);

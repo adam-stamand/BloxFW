@@ -33,25 +33,12 @@ public:
   template <typename T1, typename T2>
   Component * GetComponent(T1 compIdentifier, T2 parentIdentifier);
 
-  // Modify Containers
-  template <typename T>
-  ContainerID CreateContainer(T parentIdentifier, std::string contName);
-  ContainerID CreateContainer(std::string contName) {return CreateContainer(this->GetID(), contName);}
 
   template <typename T1, typename T2>
   void DestroyContainer(T1 contIdentifier, T2 parentIdentifier);
   template <typename T>
   void DestroyContainer(T contIdentifier){DestroyContainer(contIdentifier, this->GetID());}
 
-  // Modify Components
-  template <typename T>
-  void InsertComponents(std::vector<Component*> comps, T parentIdentifier);
-  void InsertComponents(std::vector<Component*> comps){InsertComponents(comps, this->GetID());}
-
-  template <typename T1, typename T2>   // Does not delete/free component
-  void EraseComponent(T1 compIdentifier, T2 parentIdentifier);
-  template <typename T>                 // Does not delete/free component
-  void EraseComponent(T compIdentifier){EraseComponent(compIdentifier, this->GetID());}
 
 
   // Messaging Interface
@@ -65,8 +52,13 @@ public:
   template <typename T>
   void Publish(Message  & msg, T subIdentifier){Publish(msg, subIdentifier, this->GetID());}
 
+  template <typename T>
+  ContainerID RegisterContainer(Container * cont, T parentIdentifier);
+  ContainerID RegisterContainer(Container * cont) {return RegisterContainer(cont, this->GetID());}
 
 private:
+  // Modify Containers
+
   labeled_box<ContainerID, Container*> managedContainers;
 };
 
@@ -78,90 +70,61 @@ private:
 // Modify Containers
 template <typename T>
 Container * Manager::GetContainer(T contIdentifier){
-  Container * cont;
-  this->managedContainers.at(cont, contIdentifier);
-  return cont;
+  return  this->managedContainers.at(contIdentifier);
 }
 
 // Modify Containers
 template <typename T1, typename T2>
 Component * Manager::GetComponent(T1 compIdentifier, T2 parentIdentifier){
-  Container * parentCont;
-  this->managedContainers.at(parentCont, parentIdentifier);
-  if (parentCont == NULL){
-    return parentCont;
-  }
+  Container * parentCont = this->managedContainers.at(parentIdentifier);
   return parentCont->GetComponent(compIdentifier);
 }
 
 
 template <typename T>
-ContainerID Manager::CreateContainer(T parentIdentifier, std::string contName){
+ContainerID Manager::RegisterContainer(Container * cont, T parentIdentifier){
   // Get reference to parent and new containers
-  Container * parentCont;
-  Container * newCont = new Container(contName);
-  int rv = this->managedContainers.at(parentCont, parentIdentifier);
+  Container * parentCont = this->managedContainers.at(parentIdentifier);
 
-  if (rv == 0) assert(0); // parent doesn't exist
   // Add reference to manager and parent
-  ContainerID contID = this->managedContainers.add(newCont, contName);
-  newCont->SetID(contID);
-  parentCont->AddContainer(newCont);
+  ContainerID contID = this->managedContainers.add(cont, cont->GetName());
+  cont->SetID(contID);
+  cont->SetManager(this);
+  cont->SetInit(true);
+  //parentCont->AddContainer(cont);
 
+  cont->AddedToManager();
   // Return new container ID
-  return newCont->GetID();
+  return cont->GetID();
 }
 
 
 template <typename T1, typename T2>
 void Manager::DestroyContainer(T1 contIdentifier, T2 parentIdentifier){
   // Get reference to parent
-  Container* parentCont;
-  int rv = this->managedContainers.at(parentCont, parentIdentifier);
-  if (rv == 0) assert(0);
+  Container* parentCont = this->managedContainers.at(parentIdentifier);
+  this->managedContainers.remove(contIdentifier);
 
   // Remove reference from both parent and manager
-  parentCont->RemoveContainer(contIdentifier);
-  delete(managedContainers.remove(contIdentifier));
+  //parentCont->RemoveContainer(contIdentifier);
+  parentCont->SetInit(false);
 }
 
 
 
 template <typename T1, typename T2>
 void Manager::Subscribe(Subscription sub, T1 subIdentifier, T2 parentIdentifier){
-  Container * cont;
-  int rv = this->managedContainers.at(cont, parentIdentifier);
-  if (rv == 0) assert(0);
+  Container * cont = this->managedContainers.at(parentIdentifier);
   cont->AddSubscription(sub, subIdentifier);
 }
 
 
 template <typename T1, typename T2>
 void Manager::Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier){
-  Container * cont;
-  int rv = this->managedContainers.at(cont, parentIdentifier);
-  if (rv == 0) assert(0);
+  Container * cont = this->managedContainers.at(parentIdentifier);
   cont->PublishMessageLocally(msg, subIdentifier);
 }
 
-
-
-template <typename T>
-void Manager::InsertComponents(std::vector<Component*> comps, T parentIdentifier){
-  Container* cont;
-  int rv = this->managedContainers.at(cont, parentIdentifier);
-  if (rv == 0) assert(0);
-  cont->AddComponents({comps});
-}
-
-
-template <typename T1, typename T2>
-void Manager::EraseComponent(T1 compIdentifier, T2 parentIdentifier){
-  Container * parentCont;
-  int rv = this->managedContainers.at(parentCont, parentIdentifier);
-  if (rv == 0) assert(0);
-  parentCont->RemoveComponent(compIdentifier);
-}
 
 }
 #endif

@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include <assert.h>
+#include "../tools/debug.h"
 #include "../utils/types.h"
 
 
@@ -20,12 +21,10 @@ class Component
 {
 
 public:
-  // Must give Component Name upon instantiation
-  Component(std::string compName) : name(compName){}
-  // Allow destructor to be overriden
-  virtual ~Component(){};
+  Component(std::string compName) : name(compName){} // Must give Component Name upon instantiation
+  virtual ~Component(){}; // Allow destructor to be overriden
 
-  virtual void AddedToContainer() = 0;
+  virtual void AddedToManager() = 0; // User must define behavior when component is added to Container
 
   // Getters
   ComponentID GetID();
@@ -67,8 +66,10 @@ private:
   void SetID(ComponentID compID);
   void SetParentID(ContainerID contID);
   void SetManager(Manager * manager);
+  void SetInit(bool state);
 
   // Private members
+  bool initialized = false;
   ComponentID id = 0;
   ContainerID parentID = 0;
   Manager * manager = NULL;
@@ -79,6 +80,13 @@ private:
 
 template <class T1, class T2, class T3>
 void Component::SubscribeToContainerMessage(void (T1::*f)(Message &), T2 msgIdentifier, T3 contIdentifier){
+  if (!this->initialized){
+    int rv;
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ERROR, "Component NOT Initialized", this->Print());
+    #endif
+    return;
+  }
   assert(f != NULL);
   MessageFunction function = std::bind(f, (T1*)(this), std::placeholders::_1);
   Subscription sub;
@@ -90,6 +98,12 @@ void Component::SubscribeToContainerMessage(void (T1::*f)(Message &), T2 msgIden
 
 template <class T1, class T2>
 void Component::PublishMessageToContainer(Message &msg, T1 msgIdentifier, T2 contIdentifier){
+  if (!this->initialized){
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ERROR, "Component NOT Initialized", this->Print());
+    #endif
+    return;
+  }
   msg.publisher = this;
   PublishHelper(msg, msgIdentifier, contIdentifier);
 }

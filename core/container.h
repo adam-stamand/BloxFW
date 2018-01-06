@@ -22,6 +22,7 @@ public:
   // Allow destructor to be overriden
   virtual ~Container(){}
 
+  void AddedToManager();
 
   // Getters
   //ComponentID GetComponentID(std::string name);
@@ -36,15 +37,6 @@ public:
   friend class Container;
 
 
-
-private:
-  // Modify Containers
-  ContainerID AddContainer(Container * cont);
-  Container * GetContainer(ContainerID contID);
-  Container * GetContainer(std::string contName);
-  Container * RemoveContainer(ContainerID contID); // make templates out of these
-  Container * RemoveContainer(std::string contName);
-
   // Modify Components within Container
   void AddComponents(std::vector<Component*> comps);
   Component * GetComponent(ComponentID compID);
@@ -52,20 +44,33 @@ private:
   Component * RemoveComponent(ComponentID compID);
   Component * RemoveComponent(std::string compName);
 
+  ContainerID AddContainer(Container * cont);
+  Container * GetContainer(ContainerID contID);
+  Container * GetContainer(std::string contName);
+  //Container * RemoveContainer(ContainerID contID); // make templates out of these
+  void RemoveContainer();
+
+protected:
+  // Modify Containers
+  void InitComponent(Component * comp);
+
+
   // Publishing and Subscription System for Intra Entity communication
   template <typename T>
-  SubscriptionID AddSubscription(Subscription sub, T msgName);
+  void AddSubscription(Subscription sub, T msgName);
   template <typename T>
-  SubscriptionID PublishMessageLocally(Message & msg, T msgIdentifier);
+  void PublishMessageLocally(Message & msg, T msgIdentifier);
   template <typename T>
-  SubscriptionID PublishMessageRecursively(Message  & msg, T msgIdentifier);
+  void PublishMessageRecursively(Message  & msg, T msgIdentifier);
 
   // Setters to be used by Entity only
+  void SetInit(bool state);
   void SetID(ComponentID compID);
   void SetParentID(ContainerID contID);
   void SetManager(Manager * manager); // consider passing in as initialization argument
 
   // Private Members
+  bool initialized = false;
   Manager * manager = NULL;
   ContainerID id = 0;
   ContainerID parentID = 0;
@@ -79,43 +84,42 @@ private:
 
 
 template <typename T>
-SubscriptionID Container::PublishMessageLocally(Message & msg, T subIdentifier){
+void Container::PublishMessageLocally(Message & msg, T subIdentifier){
   std::vector<Subscription> * subs;
-  SubscriptionID subID = subscriptions.at(subs, subIdentifier);
-  if (subID != 0){
-    for (unsigned int i = 0; i < subs->size(); i++){
-      subs->at(i).callback(msg);
-    }
+  subs = subscriptions.at(subIdentifier);
+  for (unsigned int i = 0; i < subs->size(); i++){
+    subs->at(i).callback(msg);
   }
-  return subID;
 }
 
 
 template <typename T>
-SubscriptionID Container::PublishMessageRecursively(Message  & msg, T subIdentifier){
-  // Not implemented yet
+void Container::PublishMessageRecursively(Message  & msg, T subIdentifier){
+
+  for (unsigned int i = 0; i < containers.size(); i++){
+    Container * cont = containers.at(i);
+    cont->PublishMessageRecursively(msg, subIdentifier);
+  }
+  PublishMessageLocally(msg, subIdentifier);
 }
 
 // Publishing and Subscription System for Intra Entity communication
 template <typename T>
-SubscriptionID Container::AddSubscription(Subscription sub, T subIdentifier){
-  std::vector<Subscription> * subs = NULL;
-  SubscriptionID subID = subscriptions.at(subs, subIdentifier);
-  if (subs == NULL){
+void Container::AddSubscription(Subscription sub, T subIdentifier){
+  std::vector<Subscription> * subs;
+  if (subscriptions.valid(subIdentifier)){
+    subs = subscriptions.at(subIdentifier);
+  }else{
     subs = new(std::vector<Subscription>);
-    subID = subscriptions.add(subs, subIdentifier);
+    subscriptions.add(subs, subIdentifier);
   }
   subs->push_back(sub);
 
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : " + subscriptions.get_label(subID) );
+   DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : " );//+ subscriptions.get_label(subID) );
   #endif
-
-  return subID;
+}
 }
 
-
-
-}
 
 #endif

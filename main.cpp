@@ -3,6 +3,17 @@
 
 using namespace bx;
 
+class GameComponent : public Component
+{
+public:
+  GameComponent(std::string name) : Component(name){}
+  ~GameComponent(){}
+
+  virtual void Update(){};
+
+};
+
+
 class MovementMessage : public Message
 {
 public:
@@ -11,15 +22,15 @@ public:
 };
 
 
-class Physics : public Component
+class Physics : public GameComponent
 {
 public:
-  Physics(std::string name):Component(name){}
+  Physics(std::string name):GameComponent(name){}
   ~Physics(){}
 
-  void AddedToContainer(){
-    SubscribeToContainerMessage(&Physics::Move, "move", "Character");
-    SubscribeToContainerMessage(&Physics::GetPos, "get_pos", "Character");
+  void AddedToManager(){
+    SubscribeToContainerMessage(&Physics::Move, "move", this->GetParentID());
+    SubscribeToContainerMessage(&Physics::GetPos, "get_pos", this->GetParentID());
   };
 
 private:
@@ -40,12 +51,12 @@ private:
 };
 
 
-class Controls : public Component
+class Controls : public GameComponent
 {
 public:
-  Controls(std::string name):Component(name){}
+  Controls(std::string name):GameComponent(name){}
   ~Controls(){}
-  void AddedToContainer(){
+  void AddedToManager(){
     //SubscribeToContainerMessage(&Person::Control, "Control", "manager");
   }
 
@@ -53,48 +64,63 @@ public:
     MovementMessage move;
     move.moveX = 5;
     move.moveY = 3;
-    PublishMessageToContainer(move, "move", "Character");
+    PublishMessageToContainer(move, "move", this->GetParentID());
   }
 
 };
 
-
-class Graphics : public Component
+/*
+class Graphics : public GameComponent
 {
 public:
 
 };
+*/
 
-class State : public Component
+class State : public GameComponent
 {
 public:
-  State(std::string name):Component(name){}
+  State(std::string name):GameComponent(name){}
   ~State(){}
-  void AddedToContainer(){
+  void AddedToManager(){
     //SubscribeToContainerMessage(&Person::Control, "Control", "manager");
   }
 
   void PrintState(){
     MovementMessage move;
-    PublishMessageToContainer(move, "get_pos", "Character");
+    PublishMessageToContainer(move, "get_pos", this->GetParentID());
     printf("State: X position is %f, Y position is %f\n", move.moveX, move.moveY);
   }
 
 };
 
+class Entity : public Container{
+public:
+  Entity(std::string name) : Container(name){}
+  virtual ~Entity(){}
 
+  void Update(){
+    for (unsigned int i = 1; i < containers.size(); i++){
+      components.valid(i);
+    }
+  };
+
+
+};
 
 int main(void){
 
   Controls * controls = new Controls("control");
   Physics * physics = new Physics("physics");
   State * state = new State("state");
+  Entity * character = new Entity("Character");
 
   Manager manager("manager");
+  character->AddComponents({physics, controls, state});
+  manager.AddContainer(character);
 
-  manager.CreateContainer("Character");
 
-  manager.InsertComponents({physics, controls, state}, "Character");
+
 
   controls->UpArrowPressed();
 
