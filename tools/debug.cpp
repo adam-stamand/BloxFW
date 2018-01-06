@@ -1,19 +1,19 @@
 #include "debug.h"
-#include <iostream>
+
 
 using namespace bx;
 
 
-void DebugLog(DebugLevel lvl, std::string message){
+void bx::DebugLog(DebugLevel lvl, std::string event, std::string message){
   switch(lvl){
     case BLOX_ACTIVITY:
-      std::cout << "ACTIVITY ";
+      std::cout << "ACTIVITY:\t";
       break;
 
     case BLOX_ERROR:
-      std::cout << "ERROR";
+      std::cout << "ERROR:\t";
       break;
   }
 
-  std::cout << message << std::endl;
+  std::cout << "--" + event + "--\t" + message << std::endl;
 }

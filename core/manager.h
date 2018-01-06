@@ -6,6 +6,7 @@
 #include "../utils/labeled_box.h"
 #include "../utils/types.h"
 #include <assert.h>
+#include "../tools/debug.h"
 
 namespace bx{
 
@@ -16,7 +17,11 @@ class Manager : public Container
 public:
   Manager(std::string contName) : Container (contName){
     this->SetID(managedContainers.add(this, contName)); // Manager manages itself as well
+    this->SetParentID(this->GetID());
     this->manager = this;
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ACTIVITY, "Manager Created", contName + "/" + std::to_string(this->GetID()));
+    #endif
   }
   ~Manager(){}
 
@@ -26,7 +31,7 @@ public:
 
   // Modify Containers
   template <typename T1, typename T2>
-  Component * GetComponent(T1 parentIdentifier, T2 compIdentifier);
+  Component * GetComponent(T1 compIdentifier, T2 parentIdentifier);
 
   // Modify Containers
   template <typename T>
@@ -80,9 +85,8 @@ Container * Manager::GetContainer(T contIdentifier){
 
 // Modify Containers
 template <typename T1, typename T2>
-Component * Manager::GetComponent(T1 parentIdentifier, T2 compIdentifier){
+Component * Manager::GetComponent(T1 compIdentifier, T2 parentIdentifier){
   Container * parentCont;
-  Container * cont;
   this->managedContainers.at(parentCont, parentIdentifier);
   if (parentCont == NULL){
     return parentCont;

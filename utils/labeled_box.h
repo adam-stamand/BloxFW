@@ -23,6 +23,8 @@ public:
   INDEX at(ITEM &item, std::string itemName);
   INDEX at(ITEM &item, INDEX itemIndex);
   size_t size(){return items.size();}
+  std::string get_label(INDEX itemIndex);
+  INDEX get_index(std::string itemName);
 
 private:
   std::map<std::string, INDEX> itemNames;
@@ -33,7 +35,24 @@ private:
 
 
 
+template <typename INDEX, typename ITEM>
+std::string labeled_box<INDEX,ITEM>::get_label(INDEX itemIndex){
+  for (auto iter = itemNames.begin(); iter != itemNames.end(); iter++){
+    if (iter->second == USE_INDEX(itemIndex)){
+      return iter->first;
+    }
+  }
+  return "";
+}
 
+template <typename INDEX, typename ITEM>
+INDEX labeled_box<INDEX,ITEM>::get_index(std::string itemName){
+  auto iter = itemNames.find(itemName);
+  if (iter != itemNames.end()){
+    return RETURN_INDEX(iter->second);
+  }
+  return 0;
+}
 
 
 

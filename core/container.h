@@ -71,7 +71,7 @@ private:
   ContainerID parentID = 0;
   const std::string name;
 
-  labeled_box<MessageID,std::vector<Subscription>> subscriptions;
+  labeled_box<MessageID,std::vector<Subscription>*> subscriptions;
   labeled_box<ContainerID,Container*> containers;
   labeled_box<ComponentID,Component*> components;
 };
@@ -80,11 +80,11 @@ private:
 
 template <typename T>
 SubscriptionID Container::PublishMessageLocally(Message const & msg, T subIdentifier){
-  std::vector<Subscription> subs;
+  std::vector<Subscription> * subs;
   SubscriptionID subID = subscriptions.at(subs, subIdentifier);
   if (subID != 0){
-    for (unsigned int i = 0; i < subs.size(); i++){
-      subs.at(i).callback(msg);
+    for (unsigned int i = 0; i < subs->size(); i++){
+      subs->at(i).callback(msg);
     }
   }
   return subID;
@@ -99,13 +99,18 @@ SubscriptionID Container::PublishMessageRecursively(Message const & msg, T subId
 // Publishing and Subscription System for Intra Entity communication
 template <typename T>
 SubscriptionID Container::AddSubscription(Subscription sub, T subIdentifier){
-  std::vector<Subscription> subs;
+  std::vector<Subscription> * subs = NULL;
   SubscriptionID subID = subscriptions.at(subs, subIdentifier);
-  if (subID == 0){
-    subID = subscriptions.add({sub}, subIdentifier);
-  } else{
-    subs.push_back(sub);
+  if (subs == NULL){
+    subs = new(std::vector<Subscription>);
+    subID = subscriptions.add(subs, subIdentifier);
   }
+  subs->push_back(sub);
+
+  #ifdef BLOX_DEBUG
+  DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : " + subscriptions.get_label(subID) );
+  #endif
+
   return subID;
 }
 

@@ -52,16 +52,14 @@ void Container::SetManager(Manager * manager) {
 // Modify Entities
 ContainerID Container::AddContainer(Container * cont){
   assert(cont != NULL);
-  #ifdef BLOX_DEBUG
-  puts("SDFSDFSD");
-  #endif
   cont->SetParentID(this->GetID());
   cont->SetManager(this->manager);
   ContainerID contID = containers.add(cont, cont->GetName());
-  cont->SetID(contID);
+
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Container Added - " + cont->Print());
+  DebugLog(BLOX_ACTIVITY, "Container Added", cont->Print());
   #endif
+
   return contID;
 }
 
@@ -81,12 +79,24 @@ Container * Container::GetContainer(std::string contName){
 
 Container * Container::RemoveContainer(ContainerID contID){
   assert(contID != 0);
-  return containers.remove(contID);
+  Container * cont = containers.remove(contID);
+
+  #ifdef BLOX_DEBUG
+  DebugLog(BLOX_ACTIVITY, "Container Removed", cont->Print());
+  #endif
+
+  return cont;
 }
 
 
 Container * Container::RemoveContainer(std::string contName){
-  return containers.remove(contName);
+  Container * cont = containers.remove(contName);
+
+  #ifdef BLOX_DEBUG
+  DebugLog(BLOX_ACTIVITY, "Container Removed", cont->Print());
+  #endif
+
+  return cont;
 }
 
 
@@ -99,7 +109,13 @@ void Container::AddComponents(std::vector<Component*> comps){
     comp->SetManager(this->manager);
     ComponentID compID = components.add(comp, comp->GetName());
     comp->SetID(compID);
+
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ACTIVITY, "Component Added", comp->Print());
+    #endif
+
     comp->AddedToContainer();
+
   }
 }
 
@@ -120,10 +136,22 @@ Component * Container::GetComponent(std::string compName){
 
 Component * Container::RemoveComponent(ComponentID compID){
   assert(compID != 0);
-  return components.remove(compID);
+  Component * comp =  components.remove(compID);
+
+  #ifdef BLOX_DEBUG
+  DebugLog(BLOX_ACTIVITY, "Container Removed", comp->Print());
+  #endif
+
+  return comp;
 }
 
 
 Component * Container::RemoveComponent(std::string compName){
-  return components.remove(compName);
+  Component * comp = components.remove(compName);
+
+  #ifdef BLOX_DEBUG
+  DebugLog(BLOX_ACTIVITY, "Container Removed", comp->Print());
+  #endif
+
+  return comp;
 }
