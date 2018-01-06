@@ -40,14 +40,14 @@ public:
 
   // Subscription and Publishing System
   template <class T1, class T2, class T3>
-  void SubscribeToContainerMessage(void (T1::*f)(Message const &), T2 msgIdentifier, T3 contIdentifier);
+  void SubscribeToContainerMessage(void (T1::*f)(Message &), T2 msgIdentifier, T3 contIdentifier);
   template <class T1, class T2>
-  void SubscribeToContainerMessage(void (T1::*f)(Message const &), T2 msgIdentifier) {SubscribeToContainerMessage(f, msgIdentifier, this->GetParentID());}
+  void SubscribeToContainerMessage(void (T1::*f)(Message &), T2 msgIdentifier) {SubscribeToContainerMessage(f, msgIdentifier, this->GetParentID());}
 
   template <class T1, class T2>
-  void PublishMessageToContainer(T1 msgIdentifier, T2 contIdentifier);
+  void PublishMessageToContainer(Message &msg, T1 msgIdentifier, T2 contIdentifier);
   template <class T>
-  void PublishMessageToContainer(T msgIdentifier){PublishMessageToContainer(msgIdentifier, this->GetParentID());}
+  void PublishMessageToContainer(Message &msg, T msgIdentifier){PublishMessageToContainer(msgIdentifier, this->GetParentID());}
 
 
 private:
@@ -58,10 +58,10 @@ private:
   void SubscribeHelper(Subscription sub, MessageID msgIdentifier, ContainerID contIdentifier);
 
 
-  void PublishHelper(Message const & msg, std::string msgIdentifier, std::string contIdentifier);
-  void PublishHelper(Message const & msg, MessageID msgIdentifier, std::string contIdentifier);
-  void PublishHelper(Message const & msg, std::string msgIdentifier, ContainerID contIdentifier);
-  void PublishHelper(Message const & msg, MessageID msgIdentifier, ContainerID contIdentifier);
+  void PublishHelper(Message & msg, std::string msgIdentifier, std::string contIdentifier);
+  void PublishHelper(Message  & msg, MessageID msgIdentifier, std::string contIdentifier);
+  void PublishHelper(Message  & msg, std::string msgIdentifier, ContainerID contIdentifier);
+  void PublishHelper(Message  & msg, MessageID msgIdentifier, ContainerID contIdentifier);
 
   // Setters to be used by Container only
   void SetID(ComponentID compID);
@@ -78,7 +78,7 @@ private:
 
 
 template <class T1, class T2, class T3>
-void Component::SubscribeToContainerMessage(void (T1::*f)(Message const &), T2 msgIdentifier, T3 contIdentifier){
+void Component::SubscribeToContainerMessage(void (T1::*f)(Message &), T2 msgIdentifier, T3 contIdentifier){
   assert(f != NULL);
   MessageFunction function = std::bind(f, (T1*)(this), std::placeholders::_1);
   Subscription sub;
@@ -89,8 +89,7 @@ void Component::SubscribeToContainerMessage(void (T1::*f)(Message const &), T2 m
 
 
 template <class T1, class T2>
-void Component::PublishMessageToContainer(T1 msgIdentifier, T2 contIdentifier){
-  Message msg;
+void Component::PublishMessageToContainer(Message &msg, T1 msgIdentifier, T2 contIdentifier){
   msg.publisher = this;
   PublishHelper(msg, msgIdentifier, contIdentifier);
 }

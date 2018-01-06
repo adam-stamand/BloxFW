@@ -56,9 +56,9 @@ private:
   template <typename T>
   SubscriptionID AddSubscription(Subscription sub, T msgName);
   template <typename T>
-  SubscriptionID PublishMessageLocally(Message const & msg, T msgIdentifier);
+  SubscriptionID PublishMessageLocally(Message & msg, T msgIdentifier);
   template <typename T>
-  SubscriptionID PublishMessageRecursively(Message const & msg, T msgIdentifier);
+  SubscriptionID PublishMessageRecursively(Message  & msg, T msgIdentifier);
 
   // Setters to be used by Entity only
   void SetID(ComponentID compID);
@@ -79,7 +79,7 @@ private:
 
 
 template <typename T>
-SubscriptionID Container::PublishMessageLocally(Message const & msg, T subIdentifier){
+SubscriptionID Container::PublishMessageLocally(Message & msg, T subIdentifier){
   std::vector<Subscription> * subs;
   SubscriptionID subID = subscriptions.at(subs, subIdentifier);
   if (subID != 0){
@@ -92,7 +92,7 @@ SubscriptionID Container::PublishMessageLocally(Message const & msg, T subIdenti
 
 
 template <typename T>
-SubscriptionID Container::PublishMessageRecursively(Message const & msg, T subIdentifier){
+SubscriptionID Container::PublishMessageRecursively(Message  & msg, T subIdentifier){
   // Not implemented yet
 }
 

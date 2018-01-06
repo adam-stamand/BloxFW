@@ -3,63 +3,81 @@
 
 using namespace bx;
 
-
-class Adult : public Component
+class MovementMessage : public Message
 {
 public:
-  President(std::string name):Component(name){
-  }
-  ~President(){}
-
-  void AddedToContainer(){};
-
-  void control(){PublishMessageToContainer("Control", "cont1");}
+  float moveX = 0;
+  float moveY = 0;
 };
 
 
-class Child : public Component
+class Physics : public Component
 {
 public:
-  Person(std::string name):Component(name){}
-  ~Person(){}
-  int age = 30;
-  void test(){PublishMessageToContainer("Birthday", "cont1" );}
-  void test2(){PublishMessageToContainer("Birthday", "manager" );}
+  Physics(std::string name):Component(name){}
+  ~Physics(){}
 
   void AddedToContainer(){
-    SubscribeToContainerMessage(&Person::Control, "Control", "manager");
-  }
+    SubscribeToContainerMessage(&Physics::Move, "move", "Character");
+    SubscribeToContainerMessage(&Physics::GetPos, "get_pos", "Character");
+  };
 
 private:
-  void Control(Message const & msg){
-    President * pres = (President*)msg.publisher;
-    printf("person controlled by %s\n", pres->GetName().c_str());
+  float x = 0;
+  float y = 0;
+
+  void Move(Message & msg){
+    MovementMessage * move = static_cast<MovementMessage*>(&msg);
+    x += move->moveX;
+    y += move->moveY;
+  }
+
+  void GetPos(Message & msg){
+    MovementMessage * move = static_cast<MovementMessage*>(&msg);
+    move->moveX = x;
+    move->moveY = y;
   }
 };
 
-class Company : public Component
+
+class Controls : public Component
 {
 public:
-  Company(std::string name):Component(name){
-  }
-  ~Company(){}
-
- void AddedToContainer(){
-   SubscribeToContainerMessage(&Company::Birthday,"Birthday",  "manager");
-   SubscribeToContainerMessage(&Company::Birthday,"Birthday",  "cont1");
-   SubscribeToContainerMessage(&Company::Control,"Control",  "cont1");
- }
-
-
-private:
-  void Birthday(Message const & msg){
-    Person * person = (Person*)msg.publisher;
-    printf("Company %s reporting employee %s  is %d years old.\n", GetName().c_str(), person->GetName().c_str(), person->age);
+  Controls(std::string name):Component(name){}
+  ~Controls(){}
+  void AddedToContainer(){
+    //SubscribeToContainerMessage(&Person::Control, "Control", "manager");
   }
 
-  void Control(Message const & msg){
-    President * pres = (President*)msg.publisher;
-    printf("Company %s controlled by %s\n", GetName().c_str(), pres->GetName().c_str());
+  void UpArrowPressed(){
+    MovementMessage move;
+    move.moveX = 5;
+    move.moveY = 3;
+    PublishMessageToContainer(move, "move", "Character");
+  }
+
+};
+
+
+class Graphics : public Component
+{
+public:
+
+};
+
+class State : public Component
+{
+public:
+  State(std::string name):Component(name){}
+  ~State(){}
+  void AddedToContainer(){
+    //SubscribeToContainerMessage(&Person::Control, "Control", "manager");
+  }
+
+  void PrintState(){
+    MovementMessage move;
+    PublishMessageToContainer(move, "get_pos", "Character");
+    printf("State: X position is %f, Y position is %f\n", move.moveX, move.moveY);
   }
 
 };
@@ -67,37 +85,19 @@ private:
 
 
 int main(void){
-  Person * jeff = new Person("Jeff");
-  Person * bob = new Person("Bob");
-  Person * mike = new Person("Mike");
-  Person * will = new Person("Will");
 
-
-  Company * hp = new Company("HP");
-  Company * intel = new Company("Intel");
-  President * pres = new President("President Sam");
-  bob->age = 20;
-  mike->age = 90;
+  Controls * controls = new Controls("control");
+  Physics * physics = new Physics("physics");
+  State * state = new State("state");
 
   Manager manager("manager");
 
-  manager.InsertComponents({mike});
+  manager.CreateContainer("Character");
 
-  manager.CreateContainer("cont1");
-  manager.InsertComponents({jeff, hp}, "cont1");
-  manager.InsertComponents({intel}, "cont1");
+  manager.InsertComponents({physics, controls, state}, "Character");
 
-  manager.CreateContainer("cont2");
-  manager.InsertComponents({bob, pres}, "cont2");
+  controls->UpArrowPressed();
 
-  manager.CreateContainer("cont2", "cont3");
-  manager.InsertComponents({will}, "cont3");
-
-  //jeff->test();
-  bob->test();
-  pres->control();
-  mike->test2();
-  will->test2();
-  manager.EraseComponent("Jeff", "cont1");
+  state->PrintState();
 
 }

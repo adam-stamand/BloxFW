@@ -61,9 +61,9 @@ public:
   void Subscribe(Subscription sub, T subIdentifier){Subscribe(sub, subIdentifier, this->GetID());}
 
   template <typename T1, typename T2>
-  void Publish(Message const & msg, T1 subIdentifier, T2 parentIdentifier);
+  void Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier);
   template <typename T>
-  void Publish(Message const & msg, T subIdentifier){Publish(msg, subIdentifier, this->GetID());}
+  void Publish(Message  & msg, T subIdentifier){Publish(msg, subIdentifier, this->GetID());}
 
 
 private:
@@ -137,7 +137,7 @@ void Manager::Subscribe(Subscription sub, T1 subIdentifier, T2 parentIdentifier)
 
 
 template <typename T1, typename T2>
-void Manager::Publish(Message const & msg, T1 subIdentifier, T2 parentIdentifier){
+void Manager::Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier){
   Container * cont;
   int rv = this->managedContainers.at(cont, parentIdentifier);
   if (rv == 0) assert(0);

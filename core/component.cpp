@@ -68,15 +68,15 @@ void Component::SubscribeHelper(Subscription sub, MessageID msgIdentifier, Conta
 }
 
 
-void Component::PublishHelper(Message const & msg, std::string msgIdentifier, std::string contIdentifier){
+void Component::PublishHelper(Message & msg, std::string msgIdentifier, std::string contIdentifier){
   manager->Publish(msg, msgIdentifier, contIdentifier);
 }
-void Component::PublishHelper(Message const & msg, MessageID msgIdentifier, std::string contIdentifier){
+void Component::PublishHelper(Message  & msg, MessageID msgIdentifier, std::string contIdentifier){
   manager->Publish(msg, msgIdentifier, contIdentifier);
 }
-void Component::PublishHelper(Message const & msg, std::string msgIdentifier, ContainerID contIdentifier){
+void Component::PublishHelper(Message  & msg, std::string msgIdentifier, ContainerID contIdentifier){
   manager->Publish(msg, msgIdentifier, contIdentifier);
 }
-void Component::PublishHelper(Message const & msg, MessageID msgIdentifier, ContainerID contIdentifier){
+void Component::PublishHelper(Message & msg, MessageID msgIdentifier, ContainerID contIdentifier){
   manager->Publish(msg, msgIdentifier, contIdentifier);
 }
