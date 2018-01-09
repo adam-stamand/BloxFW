@@ -16,12 +16,12 @@ class Manager : public Container
 {
 public:
   Manager(std::string contName) : Container (contName){
-    this->SetID(managedContainers.add(this, contName)); // Manager manages itself as well
-    this->SetParentID(this->GetID());
+    //this->SetID(managedContainers.add(this, contName)); // Manager manages itself as well
+    this->SetParent(this);
     this->manager = this;
-    this->SetInit(true);
+    //this->SetInit(true);
     #ifdef BLOX_DEBUG
-    DebugLog(BLOX_ACTIVITY, "Manager Created", contName + "/" + std::to_string(this->GetID()));
+    DebugLog(BLOX_ACTIVITY, "Manager Created", contName);
     #endif
   }
   ~Manager(){}
@@ -35,10 +35,10 @@ public:
   Component * GetComponent(T1 compIdentifier, T2 parentIdentifier);
 
 
-  template <typename T1, typename T2>
-  void DestroyContainer(T1 contIdentifier, T2 parentIdentifier);
-  template <typename T>
-  void DestroyContainer(T contIdentifier){DestroyContainer(contIdentifier, this->GetID());}
+  //template <typename T1, typename T2>
+  //void DestroyContainer(T1 contIdentifier, T2 parentIdentifier);
+  //template <typename T>
+  //void DestroyContainer(T contIdentifier){DestroyContainer(contIdentifier, this->GetID());}
 
 
 
@@ -53,9 +53,9 @@ public:
   template <typename T>
   void Publish(Message  & msg, T subIdentifier){Publish(msg, subIdentifier, this->GetID());}
 
-  template <typename T>
-  ContainerID RegisterContainer(Container * cont, T parentIdentifier);
-  ContainerID RegisterContainer(Container * cont) {return RegisterContainer(cont, this->GetID());}
+  //template <typename T>
+  //ContainerID RegisterContainer(Container * cont, T parentIdentifier);
+  //ContainerID RegisterContainer(Container * cont) {return RegisterContainer(cont, this->GetID());}
 
 private:
   // Modify Containers
@@ -81,7 +81,7 @@ Component * Manager::GetComponent(T1 compIdentifier, T2 parentIdentifier){
   return parentCont->GetComponent(compIdentifier);
 }
 
-
+/*
 template <typename T>
 ContainerID Manager::RegisterContainer(Container * cont, T parentIdentifier){
   // Get reference to parent and new containers
@@ -111,7 +111,7 @@ void Manager::DestroyContainer(T1 contIdentifier, T2 parentIdentifier){
   parentCont->SetInit(false);
 }
 
-
+*/
 
 template <typename T1, typename T2>
 void Manager::Subscribe(Subscription sub, T1 subIdentifier, T2 parentIdentifier){

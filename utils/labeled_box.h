@@ -8,54 +8,33 @@
 namespace bx{
 
 
-template <typename INDEX, typename ITEM>
+template <typename ID, typename ITEM>
 class labeled_box
 {
-public:
 
-  INDEX add(ITEM item, std::string itemName);
-  INDEX add(ITEM item, INDEX itemIndex);
-  ITEM remove(std::string itemName);
-  ITEM remove(INDEX itemIndex);
-  ITEM  at(std::string itemName);
-  ITEM  at(INDEX itemIndex);
-  bool valid(std::string itemName);
-  bool valid(INDEX itemIndex);
-  size_t size(){return items.size();}
-  std::string get_label(INDEX itemIndex);
-  INDEX get_index(std::string itemName);
+public:
+  typedef std::map<std::string, ID>::iterator _pair;
+  _pair   insert(ITEM item, std::string itemName);
+  _pair   erase(std::string itemName);
+  _pair   erase(ID itemIndex);
+  _pair   find(std::string itemName);
+  _pair   find(ID itemIndex);
+  bool    valid(std::string itemName);
+  bool    valid(ID itemIndex);
+  size_t  size(){return items.size();}
 
 private:
-  std::map<std::string, INDEX> itemNames;
-  box<INDEX,ITEM> items;
+  std::map<std::string, ID> itemNames;
+  box<ID,ITEM> items;
 };
 
 
 
 
 
-template <typename INDEX, typename ITEM>
-std::string labeled_box<INDEX,ITEM>::get_label(INDEX itemIndex){
-  for (auto iter = itemNames.begin(); iter != itemNames.end(); iter++){
-    if (iter->second == itemIndex){
-      return iter->first;
-    }
-  }
-  return "";
-}
 
-template <typename INDEX, typename ITEM>
-INDEX labeled_box<INDEX,ITEM>::get_index(std::string itemName){
-  auto iter = itemNames.find(itemName);
-  if (iter != itemNames.end()){
-    return iter->second;
-  }
-  return 0;
-}
-
-
-template <typename INDEX, typename ITEM>
-bool labeled_box<INDEX,ITEM>::valid(std::string itemName){
+template <typename ID, typename ITEM>
+bool labeled_box<ID,ITEM>::valid(std::string itemName){
   auto iter = itemNames.find(itemName);
   if (iter != itemNames.end()){
     return false;
@@ -63,44 +42,44 @@ bool labeled_box<INDEX,ITEM>::valid(std::string itemName){
   return items.valid(iter->second);
 }
 
-template <typename INDEX, typename ITEM>
-bool labeled_box<INDEX,ITEM>::valid(INDEX itemIndex){
+template <typename ID, typename ITEM>
+bool labeled_box<ID,ITEM>::valid(ID itemIndex){
   return items.valid(itemIndex);
 }
 
-template <typename INDEX, typename ITEM>
-ITEM labeled_box<INDEX,ITEM>::at(std::string itemName){
+template <typename ID, typename ITEM>
+ITEM labeled_box<ID,ITEM>::at(std::string itemName){
   auto iter = itemNames.find(itemName);
   assert(iter != itemNames.end());
   return items.at(iter->second);
 }
 
 
-template <typename INDEX, typename ITEM>
-ITEM labeled_box<INDEX,ITEM>::at(INDEX itemIndex){
+template <typename ID, typename ITEM>
+ITEM labeled_box<ID,ITEM>::at(ID itemIndex){
   return items.at(itemIndex);
 }
 
 
-template <typename INDEX, typename ITEM>
-INDEX labeled_box<INDEX,ITEM>::add(ITEM item, std::string itemName){
+template <typename ID, typename ITEM>
+ID labeled_box<ID,ITEM>::add(ITEM item, std::string itemName){
   auto iter = itemNames.find(itemName); // Prevent duplicates
   assert(iter == itemNames.end());
 
-  INDEX index = items.add(item);
-  itemNames.insert(std::pair<std::string,INDEX>(itemName, index));
+  ID index = items.add(item);
+  itemNames.insert(std::pair<std::string,ID>(itemName, index));
   return index;
 }
 
 
-template <typename INDEX, typename ITEM>
-INDEX labeled_box<INDEX,ITEM>::add(ITEM item, INDEX itemIndex){
+template <typename ID, typename ITEM>
+ID labeled_box<ID,ITEM>::add(ITEM item, ID itemIndex){
   assert(0); //TODO Look into
 }
 
 
-template <typename INDEX, typename ITEM>
-ITEM labeled_box<INDEX,ITEM>::remove(INDEX itemIndex){
+template <typename ID, typename ITEM>
+ITEM labeled_box<ID,ITEM>::remove(ID itemIndex){
   // Find the item by index
   auto iter = itemNames.begin();
   for (iter; iter != itemNames.end(); iter++){
@@ -116,11 +95,11 @@ ITEM labeled_box<INDEX,ITEM>::remove(INDEX itemIndex){
 
 
 
-template <typename INDEX, typename ITEM>
-ITEM labeled_box<INDEX,ITEM>::remove(std::string itemName){
+template <typename ID, typename ITEM>
+ITEM labeled_box<ID,ITEM>::remove(std::string itemName){
   auto iter = itemNames.find(itemName);
   assert(iter != itemNames.end());
-  INDEX index = iter->second;
+  ID index = iter->second;
 
   itemNames.erase(iter);
   return items.remove(index);

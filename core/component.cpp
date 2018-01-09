@@ -7,13 +7,13 @@
 using namespace bx;
 
 
-ComponentID Component::GetID(){
-  return this->id;
-}
+//ComponentID Component::GetID(){
+//  return this->id;
+//}
 
 
-ComponentID Component::GetParentID(){
-  return this->parentID;
+Container * Component::GetParent(){
+  return this->parent;
 }
 
 
@@ -37,13 +37,14 @@ std::string Component::Print(){
 }
 
 
-void Component::SetID(ComponentID compID){
-  this->id = compID;
-}
+//void Component::SetID(ComponentID compID){
+//  this->id = compID;
+//}
 
 
-void Component::SetParentID(ContainerID contID){
-  this->parentID = contID;
+void Component::SetParent(Container * cont){
+  assert(cont != NULL);
+  this->parent = cont;
 }
 
 
@@ -52,21 +53,26 @@ void Component::SetManager(Manager * manager){
   this->manager = manager;
 }
 
-void Component::SetInit(bool state){
-  this->initialized = state;
-}
+
+//void Component::SetInit(bool state){
+//  this->initialized = state;
+//}
+
 
 void Component::SubscribeHelper(Subscription sub, std::string msgIdentifier, std::string contIdentifier){
   manager->Subscribe(sub, msgIdentifier, contIdentifier);
 }
 
+
 void Component::SubscribeHelper(Subscription sub, MessageID msgIdentifier, std::string contIdentifier){
   manager->Subscribe(sub, msgIdentifier, contIdentifier);
 }
 
+
 void Component::SubscribeHelper(Subscription sub, std::string msgIdentifier, ContainerID contIdentifier){
   manager->Subscribe(sub, msgIdentifier, contIdentifier);
 }
+
 
 void Component::SubscribeHelper(Subscription sub, MessageID msgIdentifier, ContainerID contIdentifier){
   manager->Subscribe(sub, msgIdentifier, contIdentifier);
@@ -76,12 +82,18 @@ void Component::SubscribeHelper(Subscription sub, MessageID msgIdentifier, Conta
 void Component::PublishHelper(Message & msg, std::string msgIdentifier, std::string contIdentifier){
   manager->Publish(msg, msgIdentifier, contIdentifier);
 }
+
+
 void Component::PublishHelper(Message  & msg, MessageID msgIdentifier, std::string contIdentifier){
   manager->Publish(msg, msgIdentifier, contIdentifier);
 }
+
+
 void Component::PublishHelper(Message  & msg, std::string msgIdentifier, ContainerID contIdentifier){
   manager->Publish(msg, msgIdentifier, contIdentifier);
 }
+
+
 void Component::PublishHelper(Message & msg, MessageID msgIdentifier, ContainerID contIdentifier){
   manager->Publish(msg, msgIdentifier, contIdentifier);
 }

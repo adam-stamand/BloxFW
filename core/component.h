@@ -24,17 +24,16 @@ public:
   Component(std::string compName) : name(compName){} // Must give Component Name upon instantiation
   virtual ~Component(){}; // Allow destructor to be overriden
 
-  virtual void AddedToManager() = 0; // User must define behavior when component is added to Container
+  virtual void UserInit() = 0; // User must define behavior when component is added to Container
 
   // Getters
-  ComponentID GetID();
   std::string GetName();
-  ContainerID GetParentID();
+  Container * GetParent();
   Manager * GetManager();
   std::string Print(); // for debug
 
   // Give Entity Access to private members
-  friend class Container; // consider friend functions
+  //friend class Container; // consider friend functions
 
 
   // Subscription and Publishing System
@@ -48,6 +47,8 @@ public:
   template <class T>
   void PublishMessageToContainer(Message &msg, T msgIdentifier){PublishMessageToContainer(msgIdentifier, this->GetParentID());}
 
+  void Init();
+  void Uninit();
 
 private:
   // Message Helpers
@@ -63,14 +64,14 @@ private:
   void PublishHelper(Message  & msg, MessageID msgIdentifier, ContainerID contIdentifier);
 
   // Setters to be used by Container only
-  void SetID(ComponentID compID);
-  void SetParentID(ContainerID contID);
+  //void SetID(ComponentID compID);
+  void SetParent(Container * cont);
   void SetManager(Manager * manager);
-  void SetInit(bool state);
+  //void SetInit(bool state);
 
   // Private members
   bool initialized    = false;
-  Container * parent  = 0;
+  Container * parent  = NULL;
   Manager * manager   = NULL;
   const std::string   name;
 };

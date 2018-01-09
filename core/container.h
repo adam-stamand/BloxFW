@@ -22,19 +22,18 @@ public:
   // Allow destructor to be overriden
   virtual ~Container(){}
 
-  void AddedToManager();
+  void Init();
+  void Uninit();
 
   // Getters
-  //ComponentID GetComponentID(std::string name);
-  ContainerID GetID();
   std::string GetName();
-  ContainerID GetParentID();
+  Container * GetParent();
   Manager *   GetManager();
   std::string Print(); // for debug
 
   // Allow acces to private setters // TODO change to friend functions
-  friend class Manager;
-  friend class Container;
+  //friend class Manager;
+  //friend class Container;
 
 
   // Modify Components within Container
@@ -47,13 +46,14 @@ public:
   ContainerID AddContainer(Container * cont);
   Container * GetContainer(ContainerID contID);
   Container * GetContainer(std::string contName);
-  //Container * RemoveContainer(ContainerID contID); // make templates out of these
-  void RemoveContainer();
+  Container * RemoveContainer(ContainerID contID); // make templates out of these
+  Container * RemoveContainer(std::string contName); // make templates out of these
+
 
 protected:
   // Modify Containers
   void InitComponent(Component * comp);
-
+  void InitContainer(Container * cont);
 
   // Publishing and Subscription System for Intra Entity communication
   template <typename T>
@@ -63,17 +63,14 @@ protected:
   template <typename T>
   void PublishMessageRecursively(Message  & msg, T msgIdentifier);
 
+
   // Setters to be used by Entity only
-  void SetInit(bool state);
-  void SetID(ComponentID compID);
-  void SetParentID(ContainerID contID);
+  void SetParent(Container * cont);
   void SetManager(Manager * manager); // consider passing in as initialization argument
 
   // Private Members
-  bool initialized = false;
   Manager * manager = NULL;
-  ContainerID id = 0;
-  ContainerID parentID = 0;
+  ContainerID * parent = NULL;
   const std::string name;
 
   labeled_box<MessageID,std::vector<Subscription>*> subscriptions;

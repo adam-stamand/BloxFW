@@ -4,13 +4,9 @@
 using namespace bx;
 
 
-ContainerID Container::GetID(){
-  return this->id;
-}
 
-
-ContainerID Container::GetParentID(){
-  return this->parentID;
+Container * Container::GetParent(){
+  return this->parent;
 }
 
 
@@ -23,9 +19,9 @@ Manager * Container::GetManager(){
   return this->manager;
 }
 
-void Container::SetInit(bool state){
-  this->initialized = state;
-}
+//void Container::SetInit(bool state){
+//  this->initialized = state;
+//}
 
 std::string Container::Print(){
   return "Container: " + this->GetName() + "/" + std::to_string(this->GetID())   + \
@@ -34,13 +30,14 @@ std::string Container::Print(){
 }
 
 
-void Container::SetID(ContainerID contID) {
-  this->id = contID;
-}
+//void Container::SetID(ContainerID contID) {
+//  this->id = contID;
+//}
 
 
-void Container::SetParentID(ContainerID contID) {
-  this->parentID = contID;
+void Container::SetParent(Container * cont) {
+  assert(cont != NULL);
+  this->parent = cont;
 }
 
 
@@ -50,9 +47,7 @@ void Container::SetManager(Manager * manager) {
 }
 
 
-
-
-void Container::AddedToManager(){
+void Container::Init(){
   for (unsigned int i = 0; i < components.size(); i++){
     if (!components.valid(i)){
       continue;
@@ -66,27 +61,33 @@ void Container::AddedToManager(){
       continue;
     }
     Container * cont = containers.at(i);
-    this->manager->RegisterContainer(cont, this->GetID());
+    InitContainer(cont);
   }
+
 
 }
 
 
+void Container::InitContainer(Container * cont){
+  //this->manager->RegisterContainer(cont, this->GetID());
+  cont->SetManager(this->manager);
+  cont->SetParent(this);
+  cont->initialized = true;
+}
+
 // Modify Entities
-ContainerID Container::AddContainer(Container * cont){
+void Container::AddContainer(Container * cont){
   assert(cont != NULL);
   containers.add(cont, cont->GetName());
   // contID should not be used; use global id in manager
-  if (!this->initialized){
-    return 0;
-  }
-  ContainerID contID = this->manager->RegisterContainer(cont, this->GetID());
-
+  //if (!this->initialized){
+    //return 0;
+  //}
+  //ContainerID contID = this->manager->RegisterContainer(cont, this->GetID());
+  InitContainer(cont);
   #ifdef BLOX_DEBUG
   DebugLog(BLOX_ACTIVITY, "Container Initialized", cont->Print());
   #endif
-
-  return contID;
 }
 
 
@@ -99,7 +100,7 @@ Container * Container::GetContainer(std::string contName){
 }
 
 
-void Container::RemoveContainer(){
+void Container::Uninit(){
 
   for (unsigned int i = 0; i < components.size(); i++){
     if (!components.valid(i)){
@@ -127,7 +128,7 @@ void Container::RemoveContainer(){
 
 }
 
-/*
+
 
 Container * Container::RemoveContainer(std::string contName){
   Container * cont = containers.remove(contName);
@@ -164,20 +165,20 @@ Container * Container::RemoveContainer(std::string contName){
   return cont;
 }
 
-*/
+
 
 
 
 
 void Container::InitComponent(Component * comp){
-  comp->SetParentID(this->GetID());
+  comp->SetParent(this);
   comp->SetManager(this->manager);
-  comp->SetInit(true);
+  //comp->SetInit(true);
 
   #ifdef BLOX_DEBUG
   DebugLog(BLOX_ACTIVITY, "Component Initialized", comp->Print());
   #endif
-  comp->AddedToManager();
+  comp->Init();
 }
 
 
@@ -187,7 +188,7 @@ void Container::AddComponents(std::vector<Component*> comps){
     Component * comp = comps.at(i);
     assert(comp != NULL);
     ComponentID compID = components.add(comp, comp->GetName());
-    comp->SetID(compID);
+    //comp->SetID(compID);
     if (this->initialized){
       InitComponent(comp);
     }
