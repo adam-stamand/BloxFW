@@ -1,12 +1,15 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include "labeled_box.h"
+#include <vector>
+
 namespace bx
 {
 
 
 class Component;
-
+class Container;
 
 class Message
 {
@@ -30,6 +33,12 @@ struct Subscription{
   Component * subscriber;
   MessageFunction callback;
 };
+
+typedef _Item<SubscriptionID, std::vector<Subscription>*> SubscriptionItem;
+typedef _Item<ContainerID, Container*> ContainerItem;
+typedef _Item<ComponentID, Component*> ComponentItem;
+typedef _Item<MessageID, Message> MessageItem;
+
 
 }
 #endif

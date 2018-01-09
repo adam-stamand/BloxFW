@@ -22,56 +22,48 @@ public:
   // Allow destructor to be overriden
   virtual ~Container(){}
 
-  void Init();
-  void Uninit();
-
+  // TODO make friend functions
+  int AddedToManager(Manager * manager);
+  int RemovedFromManager();
+  void SetParent(Container * cont);
+  void SetID(ContainerID contID);
   // Getters
+  ContainerID GetID();
   std::string GetName();
   Container * GetParent();
   Manager *   GetManager();
   std::string Print(); // for debug
 
-  // Allow acces to private setters // TODO change to friend functions
-  //friend class Manager;
-  //friend class Container;
-
-
   // Modify Components within Container
-  void AddComponents(std::vector<Component*> comps);
-  Component * GetComponent(ComponentID compID);
-  Component * GetComponent(std::string compName);
-  Component * RemoveComponent(ComponentID compID);
-  Component * RemoveComponent(std::string compName);
+  int AddComponents(std::vector<Component*> comps);
+  template <typename T>
+  Component * GetComponent(T compIdentifier);
+  template <typename T>
+  int RemoveComponent(T compIdentifier);
 
-  ContainerID AddContainer(Container * cont);
-  Container * GetContainer(ContainerID contID);
-  Container * GetContainer(std::string contName);
-  Container * RemoveContainer(ContainerID contID); // make templates out of these
-  Container * RemoveContainer(std::string contName); // make templates out of these
+  int AddContainer(Container * cont);
+  template <typename T>
+  Container * GetContainer(T contIdentifier);
+  template <typename T>
+  int RemoveContainer(T contIdentifier);
 
+  friend class Manager; //TODO wtf
 
 protected:
-  // Modify Containers
-  void InitComponent(Component * comp);
-  void InitContainer(Container * cont);
 
   // Publishing and Subscription System for Intra Entity communication
+  int AddSubscription(Subscription &sub, std::string subName);
+  int AddSubscription(Subscription &sub, SubscriptionID subID);
   template <typename T>
-  void AddSubscription(Subscription sub, T msgName);
+  int PublishMessageLocally(Message & msg, T msgIdentifier);
   template <typename T>
-  void PublishMessageLocally(Message & msg, T msgIdentifier);
-  template <typename T>
-  void PublishMessageRecursively(Message  & msg, T msgIdentifier);
-
-
-  // Setters to be used by Entity only
-  void SetParent(Container * cont);
-  void SetManager(Manager * manager); // consider passing in as initialization argument
+  int PublishMessageRecursively(Message  & msg, T msgIdentifier);
 
   // Private Members
   Manager * manager = NULL;
-  ContainerID * parent = NULL;
+  Container * parent = NULL;
   const std::string name;
+  ContainerID id;
 
   labeled_box<MessageID,std::vector<Subscription>*> subscriptions;
   labeled_box<ContainerID,Container*> containers;
@@ -80,42 +72,92 @@ protected:
 
 
 
+
 template <typename T>
-void Container::PublishMessageLocally(Message & msg, T subIdentifier){
-  std::vector<Subscription> * subs;
-  subs = subscriptions.at(subIdentifier);
-  for (unsigned int i = 0; i < subs->size(); i++){
-    subs->at(i).callback(msg);
+Container * Container::GetContainer(T contIdentifier){
+  ContainerItem item;
+  int rv = this->containers.get(item, contIdentifier);
+  if (rv != 0){
+    return NULL;
   }
+  return item.data;
 }
 
-
 template <typename T>
-void Container::PublishMessageRecursively(Message  & msg, T subIdentifier){
-
-  for (unsigned int i = 0; i < containers.size(); i++){
-    Container * cont = containers.at(i);
-    cont->PublishMessageRecursively(msg, subIdentifier);
+int Container::RemoveContainer(T contIdentifier){
+  Container * cont = GetContainer(contIdentifier);
+  if (cont == NULL){
+    return NULL;
   }
-  PublishMessageLocally(msg, subIdentifier);
-}
-
-// Publishing and Subscription System for Intra Entity communication
-template <typename T>
-void Container::AddSubscription(Subscription sub, T subIdentifier){
-  std::vector<Subscription> * subs;
-  if (subscriptions.valid(subIdentifier)){
-    subs = subscriptions.at(subIdentifier);
-  }else{
-    subs = new(std::vector<Subscription>);
-    subscriptions.add(subs, subIdentifier);
-  }
-  subs->push_back(sub);
+  cont->SetParent(NULL);
+  cont->RemovedFromManager();
 
   #ifdef BLOX_DEBUG
-   DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : " );//+ subscriptions.get_label(subID) );
+  DebugLog(BLOX_ACTIVITY, "Container Removed", cont->Print());
   #endif
+
+  return this->containers.remove(contIdentifier);
 }
+
+
+template <typename T>
+Component * Container::GetComponent(T compIdentifier){
+  ComponentItem item;
+  int rv = this->components.get(item, compIdentifier);
+  if (rv != 0){
+    DebugLog(BLOX_ERROR, "Failed Get Component", this->Print());
+    return NULL;
+  }
+  return item.data;
+}
+
+
+template <typename T>
+int Container::RemoveComponent(T compIdentifier){
+  Component * comp = GetComponent(compIdentifier);
+  if (comp != NULL){
+    return NULL;
+  }
+
+  comp->SetParent(NULL);
+  comp->RemovedFromManager();
+
+  #ifdef BLOX_DEBUG
+  DebugLog(BLOX_ACTIVITY, "Component Removed", comp->Print());
+  #endif
+
+  return this->components.remove(compIdentifier);
+}
+
+
+template <typename T>
+int Container::PublishMessageLocally(Message & msg, T subIdentifier){
+  SubscriptionItem item;
+  int rv = subscriptions.get(item, subIdentifier);
+  if (rv != 0){
+    return rv;
+  }
+
+  std::vector<Subscription> * subs = item.data;
+  for (unsigned int i = 0; i < subs->size(); i++){
+      subs->at(i).callback(msg);
+  }
+  return 0;
+}
+
+
+template <typename T>
+int Container::PublishMessageRecursively(Message  & msg, T subIdentifier){
+  int rv;
+  Container * cont;
+  for (auto iter = containers.begin(); iter != containers.end(); iter++){
+    Container * cont = GetContainer(iter->second);
+    rv |= cont->PublishMessageRecursively(msg, subIdentifier);
+  }
+  rv |= PublishMessageLocally(msg, subIdentifier);
+  return rv;
+}
+
 }
 
 

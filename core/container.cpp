@@ -4,9 +4,21 @@
 using namespace bx;
 
 
+ContainerID Container::GetID(){
+  return this->id;
+}
+
+
+void Container::SetID(ContainerID contID){
+  this->id = contID;
+}
 
 Container * Container::GetParent(){
   return this->parent;
+}
+
+void Container::SetParent(Container * cont){
+  this->parent = cont;
 }
 
 
@@ -19,218 +31,166 @@ Manager * Container::GetManager(){
   return this->manager;
 }
 
-//void Container::SetInit(bool state){
-//  this->initialized = state;
-//}
 
 std::string Container::Print(){
-  return "Container: " + this->GetName() + "/" + std::to_string(this->GetID())   + \
-  "; Parent Container: " + manager->GetContainer(this->GetParentID())->GetName() + \
-  "/" + std::to_string(this->GetParentID()) + "; ";
+  //return "Container: " + this->GetName() + "/" + std::to_string(this->GetID())   + \
+  //"; Parent Container: " + manager->GetContainer(this->GetParentID())->GetName() + \
+  //"/" + std::to_string(this->GetParentID()) + "; ";
+  return "hi";
 }
 
-
-//void Container::SetID(ContainerID contID) {
-//  this->id = contID;
-//}
-
-
-void Container::SetParent(Container * cont) {
-  assert(cont != NULL);
-  this->parent = cont;
-}
-
-
-void Container::SetManager(Manager * manager) {
+int Container::AddedToManager(Manager * manager){
   assert(manager != NULL);
   this->manager = manager;
-}
+  this->manager->RegisterContainer(this);
 
-
-void Container::Init(){
-  for (unsigned int i = 0; i < components.size(); i++){
-    if (!components.valid(i)){
-      continue;
+  for (auto iter = containers.begin(); iter != containers.end(); iter++){
+    Container * cont = GetContainer(iter->second);
+    if (cont == NULL){
+      #ifdef BLOX_DEBUG
+      DebugLog(BLOX_ERROR, "Container Failed Init", this->Print());
+      #endif
+      return -1;
     }
-    Component * comp = components.at(i);
-    InitComponent(comp);
+    cont->SetParent(this);
+    cont->AddedToManager(manager);
   }
 
-  for (unsigned int i = 0; i < containers.size(); i++){
-    if (!containers.valid(i)){
-      continue;
+  for (auto iter = components.begin(); iter != components.end(); iter++){
+    Component * comp = GetComponent(iter->second);
+    if (comp == NULL){
+      #ifdef BLOX_DEBUG
+      DebugLog(BLOX_ERROR, "Component Failed Init", this->Print());
+      #endif
+      return -1;
     }
-    Container * cont = containers.at(i);
-    InitContainer(cont);
+
+    comp->SetParent(this);
+    comp->AddedToManager(manager);
+  }
+  return 0;
+}
+
+
+int Container::RemovedFromManager(){
+  this->manager->DeregisterContainer(this);
+  this->manager = NULL;
+
+  for (auto iter = containers.begin(); iter != containers.end(); iter++){
+    Container * cont = GetContainer(iter->second);
+    if (cont == NULL){
+      #ifdef BLOX_DEBUG
+      DebugLog(BLOX_ERROR, "Container Failed UnInit", this->Print());
+      #endif
+      return -1;
+    }
+    cont->RemovedFromManager();
   }
 
+  for (auto iter = components.begin(); iter != components.end(); iter++){
+    Component * comp = GetComponent(iter->second);
+    if (comp == NULL){
+      #ifdef BLOX_DEBUG
+      DebugLog(BLOX_ERROR, "Component Failed UnInit", this->Print());
+      #endif
+      return -1;
+    }
+    comp->RemovedFromManager();
+  }
+  return 0;
 
 }
 
 
-void Container::InitContainer(Container * cont){
-  //this->manager->RegisterContainer(cont, this->GetID());
-  cont->SetManager(this->manager);
-  cont->SetParent(this);
-  cont->initialized = true;
-}
 
 // Modify Entities
-void Container::AddContainer(Container * cont){
+int Container::AddContainer(Container * cont){
   assert(cont != NULL);
-  containers.add(cont, cont->GetName());
-  // contID should not be used; use global id in manager
-  //if (!this->initialized){
-    //return 0;
-  //}
-  //ContainerID contID = this->manager->RegisterContainer(cont, this->GetID());
-  InitContainer(cont);
-  #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Container Initialized", cont->Print());
-  #endif
-}
-
-
-Container * Container::GetContainer(ContainerID contID){
-  return this->containers.at(contID);
-}
-
-Container * Container::GetContainer(std::string contName){
-  return this->containers.at(contName);
-}
-
-
-void Container::Uninit(){
-
-  for (unsigned int i = 0; i < components.size(); i++){
-    if (!components.valid(i)){
-      continue;
-    }
-    Component * comp = components.at(i);
-    comp->SetParentID(this->parentID);
-  }
-
-  for (unsigned int i = 0; i < containers.size(); i++){
-    if (!containers.valid(i)){
-      continue;
-    }
-    Container * cont = containers.at(i);
-    cont->SetParentID(this->parentID);
-  }
-
-  #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Container Removed", this->Print());
-  #endif
-
-  this->SetID(0);
-  this->SetManager(NULL);
-  this->SetParentID(0);
-
-}
-
-
-
-Container * Container::RemoveContainer(std::string contName){
-  Container * cont = containers.remove(contName);
-  if (cont == NULL){
-    #ifdef BLOX_DEBUG
-    DebugLog(BLOX_ERROR, "Failed Removal: Container doesn't exist", cont->Print());
-    #endif
-    return cont;
-  }
-  for (unsigned int i = 1; i < components.size(); i++){
-    Component * comp;
-    components.at(comp, i);
-    if (comp != NULL){
-      comp->SetParentID(this->parentID);
+  int rv;
+  cont->SetParent(this);
+  if (this->manager != NULL){
+    rv = cont->AddedToManager(this->manager);
+    if (rv != 0){
+      return rv;
     }
   }
 
-  for (unsigned int i = 1; i < containers.size(); i++){
-    Container * cont;
-    containers.at(cont, i);
-    if (cont != NULL){
-      cont->SetParentID(this->parentID);
-    }
+  ContainerItem item(cont, cont->GetName());
+  rv = containers.add(item);
+  if (rv != 0){
+    DebugLog(BLOX_ERROR, "Failed Add Container", this->Print());
+    return rv;
   }
 
-  cont->SetID(0);
-  cont->SetManager(NULL);
-  cont->SetParentID(0);
-
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Container Removed", cont->Print());
+  DebugLog(BLOX_ACTIVITY, "Container Added", cont->Print());
   #endif
 
-  return cont;
+  return 0;
 }
 
-
-
-
-
-
-void Container::InitComponent(Component * comp){
-  comp->SetParent(this);
-  comp->SetManager(this->manager);
-  //comp->SetInit(true);
-
-  #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Component Initialized", comp->Print());
-  #endif
-  comp->Init();
-}
 
 
 // Modify Components within Entity
-void Container::AddComponents(std::vector<Component*> comps){
+int Container::AddComponents(std::vector<Component*> comps){
   for (unsigned int i = 0; i < comps.size(); i++){
     Component * comp = comps.at(i);
     assert(comp != NULL);
-    ComponentID compID = components.add(comp, comp->GetName());
-    //comp->SetID(compID);
-    if (this->initialized){
-      InitComponent(comp);
+    int rv;
+    comp->SetParent(this);
+    if (this->manager != NULL){
+      comp->AddedToManager(this->manager);
+    }
+    ComponentItem item(comp, comp->GetName());
+    rv = components.add(item);
+    if (rv != 0){
+      DebugLog(BLOX_ERROR, "Failed Add Component", this->Print());
+      return rv;
+    }
+    // TODO consider returning ID or assiging comp ID
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ACTIVITY, "Component Added", comp->Print());
+    #endif
+
+  }
+  return 0;
+}
+
+
+int Container::AddSubscription(Subscription &sub, SubscriptionID subID){
+  SubscriptionItem item;
+  int rv = subscriptions.get(item, subID);
+  if (rv != 0){
+    DebugLog(BLOX_ERROR, "Failed Add Subscription", this->Print());
+    return rv; //TODO
+  }
+
+  item.data->push_back(sub);
+
+  #ifdef BLOX_DEBUG
+   //DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : " );//+ subscriptions.get_label(subID) );
+  #endif
+  return 0;
+}
+
+
+int Container::AddSubscription(Subscription &sub, std::string subName){
+  SubscriptionItem item;
+  int rv = subscriptions.get(item, subName);
+  if (rv != 0){
+    item.data = new(std::vector<Subscription>);
+    item.name = subName;
+    rv = subscriptions.add(item);
+    if (rv != 0){
+      DebugLog(BLOX_ERROR, "Failed Add Subscription", this->Print());
+      return rv; //TODO
     }
   }
-}
 
-Component * Container::GetComponent(ComponentID compID){
-  return this->components.at(compID);
-}
-
-Component * Container::GetComponent(std::string compName){
-  return this->components.at(compName);
-}
-
-
-Component * Container::RemoveComponent(ComponentID compID){
-  Component * comp =  components.remove(compID);
+  item.data->push_back(sub);
 
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Container Removed", comp->Print());
+   //DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : " );//+ subscriptions.get_label(subID) );
   #endif
-
-  comp->manager = NULL;
-  comp->SetInit(false);
-  comp->SetParentID(0);
-  comp->SetID(0);
-
-  return comp;
-}
-
-
-Component * Container::RemoveComponent(std::string compName){
-  Component * comp =  components.remove(compName);
-
-  #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Container Removed", comp->Print());
-  #endif
-
-  comp->manager = NULL;
-  comp->SetInit(false);
-  comp->SetParentID(0);
-  comp->SetID(0);
-
-  return comp;
+  return 0;
 }

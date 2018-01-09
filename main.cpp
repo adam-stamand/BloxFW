@@ -29,8 +29,8 @@ public:
   ~Physics(){}
 
   void AddedToManager(){
-    SubscribeToContainerMessage(&Physics::Move, "move", this->GetParentID());
-    SubscribeToContainerMessage(&Physics::GetPos, "get_pos", this->GetParentID());
+    SubscribeToContainerMessage(&Physics::Move, "move", this->GetParent()->GetID());
+    SubscribeToContainerMessage(&Physics::GetPos, "get_pos", this->GetParent()->GetID());
   };
 
 private:
@@ -64,7 +64,7 @@ public:
     MovementMessage move;
     move.moveX = 5;
     move.moveY = 3;
-    PublishMessageToContainer(move, "move", this->GetParentID());
+    PublishMessageToContainer(move, "move", this->GetParent()->GetID());
   }
 
 };
@@ -88,7 +88,7 @@ public:
 
   void PrintState(){
     MovementMessage move;
-    PublishMessageToContainer(move, "get_pos", this->GetParentID());
+    PublishMessageToContainer(move, "get_pos", this->GetParent()->GetID());
     printf("State: X position is %f, Y position is %f\n", move.moveX, move.moveY);
   }
 
@@ -101,7 +101,7 @@ public:
 
   void Update(){
     for (unsigned int i = 1; i < containers.size(); i++){
-      components.valid(i);
+
     }
   };
 
@@ -113,17 +113,17 @@ int main(void){
   Controls * controls = new Controls("control");
   Physics * physics = new Physics("physics");
   State * state = new State("state");
-  Entity * character = new Entity("Character");
+  Container * character = new Container("Character");
 
   Manager manager("manager");
-  manager.AddContainer(character);
   character->AddComponents({physics, controls, state});
+  manager.AddContainer(character);
 
 
 
 
-  controls->UpArrowPressed();
+  //controls->UpArrowPressed();
 
-  state->PrintState();
+  //state->PrintState();
 
 }

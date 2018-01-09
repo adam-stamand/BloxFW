@@ -15,115 +15,97 @@ namespace bx{
 class Manager : public Container
 {
 public:
-  Manager(std::string contName) : Container (contName){
-    //this->SetID(managedContainers.add(this, contName)); // Manager manages itself as well
-    this->SetParent(this);
-    this->manager = this;
-    //this->SetInit(true);
-    #ifdef BLOX_DEBUG
-    DebugLog(BLOX_ACTIVITY, "Manager Created", contName);
-    #endif
-  }
+  Manager(std::string contName);
   ~Manager(){}
 
   // Modify Containers
   template <typename T>
-  Container * GetContainer(T contIdentifier);
+  Container * GetManagedContainer(T contIdentifier);
+  template <typename T>
+  Container * RemoveManagedContainer(T contIdentifier);
 
   // Modify Containers
   template <typename T1, typename T2>
-  Component * GetComponent(T1 compIdentifier, T2 parentIdentifier);
-
-
-  //template <typename T1, typename T2>
-  //void DestroyContainer(T1 contIdentifier, T2 parentIdentifier);
-  //template <typename T>
-  //void DestroyContainer(T contIdentifier){DestroyContainer(contIdentifier, this->GetID());}
-
-
-
-  // Messaging Interface
+  Component * GetManagedComponent(T1 compIdentifier, T2 parentIdentifier);
   template <typename T1, typename T2>
-  void Subscribe(Subscription sub, T1 subIdentifier, T2 parentIdentifier);
+  Component * RemoveManagedComponent(T1 compIdentifier, T2 parentIdentifier);
+
+  // Messaging Interface // TODO Protext these as well
+  template <typename T1, typename T2>
+  int Subscribe(Subscription &sub, T1 subIdentifier, T2 parentIdentifier);
   template <typename T>
-  void Subscribe(Subscription sub, T subIdentifier){Subscribe(sub, subIdentifier, this->GetID());}
+  int Subscribe(Subscription &sub, T subIdentifier){return Subscribe(sub, subIdentifier, this->GetID());}
 
   template <typename T1, typename T2>
-  void Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier);
+  int Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier);
   template <typename T>
-  void Publish(Message  & msg, T subIdentifier){Publish(msg, subIdentifier, this->GetID());}
+  int Publish(Message  & msg, T subIdentifier){return Publish(msg, subIdentifier, this->GetID());}
 
-  //template <typename T>
-  //ContainerID RegisterContainer(Container * cont, T parentIdentifier);
-  //ContainerID RegisterContainer(Container * cont) {return RegisterContainer(cont, this->GetID());}
+  // TODO Protext these
+  int RegisterContainer(Container * cont);
+  int DeregisterContainer(Container * cont);
 
 private:
   // Modify Containers
-
   labeled_box<ContainerID, Container*> managedContainers;
 };
 
 
-
-
+// Modify Containers
+template <typename T>
+Container * Manager::GetManagedContainer(T contIdentifier){
+  ContainerItem item;
+  int rv = this->managedContainers.get(item, contIdentifier);
+  if (rv != 0){
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ERROR, "Manager Failed Get Container", this->Print());
+    #endif
+    return NULL;
+  }
+  return item.data;
+}
 
 
 // Modify Containers
 template <typename T>
-Container * Manager::GetContainer(T contIdentifier){
-  return  this->managedContainers.at(contIdentifier);
+Container * Manager::RemoveManagedContainer(T contIdentifier){
+  Container * cont = GetManagedContainer(contIdentifier);
+  if (cont == NULL){
+    return cont;
+  }
+  return cont->GetParent()->RemoveContainer(cont->GetID());
 }
+
 
 // Modify Containers
 template <typename T1, typename T2>
-Component * Manager::GetComponent(T1 compIdentifier, T2 parentIdentifier){
-  Container * parentCont = this->managedContainers.at(parentIdentifier);
-  return parentCont->GetComponent(compIdentifier);
-}
-
-/*
-template <typename T>
-ContainerID Manager::RegisterContainer(Container * cont, T parentIdentifier){
-  // Get reference to parent and new containers
-  Container * parentCont = this->managedContainers.at(parentIdentifier);
-
-  // Add reference to manager and parent
-  ContainerID contID = this->managedContainers.add(cont, cont->GetName());
-  cont->SetID(contID);
-  cont->SetManager(this);
-  cont->SetInit(true);
-  //parentCont->AddContainer(cont);
-
-  cont->AddedToManager();
-  // Return new container ID
-  return cont->GetID();
+Component * Manager::GetManagedComponent(T1 compIdentifier, T2 parentIdentifier){
+  Container *cont = GetManagedContainer(parentIdentifier);
+  if (cont == NULL){
+    return cont;
+  }
+  return cont->GetComponent(compIdentifier);
 }
 
 
 template <typename T1, typename T2>
-void Manager::DestroyContainer(T1 contIdentifier, T2 parentIdentifier){
-  // Get reference to parent
-  Container* parentCont = this->managedContainers.at(parentIdentifier);
-  this->managedContainers.remove(contIdentifier);
-
-  // Remove reference from both parent and manager
-  //parentCont->RemoveContainer(contIdentifier);
-  parentCont->SetInit(false);
-}
-
-*/
-
-template <typename T1, typename T2>
-void Manager::Subscribe(Subscription sub, T1 subIdentifier, T2 parentIdentifier){
-  Container * cont = this->managedContainers.at(parentIdentifier);
-  cont->AddSubscription(sub, subIdentifier);
+int Manager::Subscribe(Subscription &sub, T1 subIdentifier, T2 parentIdentifier){
+  Container * cont = GetManagedContainer(parentIdentifier);
+  if (cont == NULL){
+    return -1;
+  }
+  return cont->AddSubscription(sub, subIdentifier);
 }
 
 
 template <typename T1, typename T2>
-void Manager::Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier){
-  Container * cont = this->managedContainers.at(parentIdentifier);
+int Manager::Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier){
+  Container * cont = GetManagedContainer(parentIdentifier);
+  if (cont == NULL){
+    return -1;
+  }
   cont->PublishMessageLocally(msg, subIdentifier);
+  return 0;
 }
 
 

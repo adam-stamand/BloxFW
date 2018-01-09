@@ -7,10 +7,13 @@
 using namespace bx;
 
 
-//ComponentID Component::GetID(){
-//  return this->id;
-//}
+void Component::SetParent(Container * cont){
+  this->parent = cont;
+}
 
+ComponentID Component::GetParentID(){
+  return this->parent->GetID();
+}
 
 Container * Component::GetParent(){
   return this->parent;
@@ -28,72 +31,60 @@ std::string Component::GetName(){
 
 
 std::string Component::Print(){
-  if (manager == NULL){
-    puts("Failed print: null manager");
-    return "";
-  }
-  return "Component: " + this->GetName() + "/" + std::to_string(this->GetID()) + "; Container: " + \
-  manager->GetContainer(this->GetParentID())->GetName() + "/" + std::to_string(this->GetParentID()) + "; ";
+  return "hi";
+  //return "Component: " + this->GetName() + "/" + std::to_string(this->GetID()) + "; Container: " + \
+  //manager->GetContainer(this->GetParentID())->GetName() + "/" + std::to_string(this->GetParentID()) + "; ";
 }
 
 
-//void Component::SetID(ComponentID compID){
-//  this->id = compID;
-//}
-
-
-void Component::SetParent(Container * cont){
-  assert(cont != NULL);
-  this->parent = cont;
-}
-
-
-void Component::SetManager(Manager * manager){
+void Component::AddedToManager(Manager * manager){
   assert(manager != NULL);
   this->manager = manager;
+  this->UserInit();
 }
 
 
-//void Component::SetInit(bool state){
-//  this->initialized = state;
-//}
-
-
-void Component::SubscribeHelper(Subscription sub, std::string msgIdentifier, std::string contIdentifier){
-  manager->Subscribe(sub, msgIdentifier, contIdentifier);
+void Component::RemovedFromManager(){
+  this->manager = NULL;
 }
 
 
-void Component::SubscribeHelper(Subscription sub, MessageID msgIdentifier, std::string contIdentifier){
-  manager->Subscribe(sub, msgIdentifier, contIdentifier);
+
+int Component::SubscribeHelper(Subscription &sub, std::string msgIdentifier, std::string contIdentifier){
+  return manager->Subscribe(sub, msgIdentifier, contIdentifier);
 }
 
 
-void Component::SubscribeHelper(Subscription sub, std::string msgIdentifier, ContainerID contIdentifier){
-  manager->Subscribe(sub, msgIdentifier, contIdentifier);
+int Component::SubscribeHelper(Subscription &sub, MessageID msgIdentifier, std::string contIdentifier){
+  return manager->Subscribe(sub, msgIdentifier, contIdentifier);
 }
 
 
-void Component::SubscribeHelper(Subscription sub, MessageID msgIdentifier, ContainerID contIdentifier){
-  manager->Subscribe(sub, msgIdentifier, contIdentifier);
+int Component::SubscribeHelper(Subscription &sub, std::string msgIdentifier, ContainerID contIdentifier){
+  return manager->Subscribe(sub, msgIdentifier, contIdentifier);
 }
 
 
-void Component::PublishHelper(Message & msg, std::string msgIdentifier, std::string contIdentifier){
-  manager->Publish(msg, msgIdentifier, contIdentifier);
+int Component::SubscribeHelper(Subscription &sub, MessageID msgIdentifier, ContainerID contIdentifier){
+  return manager->Subscribe(sub, msgIdentifier, contIdentifier);
 }
 
 
-void Component::PublishHelper(Message  & msg, MessageID msgIdentifier, std::string contIdentifier){
-  manager->Publish(msg, msgIdentifier, contIdentifier);
+int Component::PublishHelper(Message & msg, std::string msgIdentifier, std::string contIdentifier){
+  return manager->Publish(msg, msgIdentifier, contIdentifier);
 }
 
 
-void Component::PublishHelper(Message  & msg, std::string msgIdentifier, ContainerID contIdentifier){
-  manager->Publish(msg, msgIdentifier, contIdentifier);
+int Component::PublishHelper(Message  & msg, MessageID msgIdentifier, std::string contIdentifier){
+  return manager->Publish(msg, msgIdentifier, contIdentifier);
 }
 
 
-void Component::PublishHelper(Message & msg, MessageID msgIdentifier, ContainerID contIdentifier){
-  manager->Publish(msg, msgIdentifier, contIdentifier);
+int Component::PublishHelper(Message  & msg, std::string msgIdentifier, ContainerID contIdentifier){
+  return manager->Publish(msg, msgIdentifier, contIdentifier);
+}
+
+
+int Component::PublishHelper(Message & msg, MessageID msgIdentifier, ContainerID contIdentifier){
+  return manager->Publish(msg, msgIdentifier, contIdentifier);
 }
