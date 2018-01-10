@@ -43,8 +43,11 @@ void Component::AddedToManager(Manager * manager){
 
 
 void Component::RemovedFromManager(){
-  for (auto iter = subList.begin(); iter != subList.end(); iter++){
-    UnsubscribeContainerMessage(iter->first, iter->second); // TODO hadnle return value
+  for (auto iter = receipts.begin(); iter != receipts.end(); iter++){
+    ReceiptElem elem;
+    elem.id = iter->second;
+    receipts.get(elem);
+    manager->Unsubscribe(elem.data);
   }
   this->manager = NULL;
 }
@@ -56,29 +59,50 @@ int Component::SubscribeHelper(Subscription &sub, std::string msgIdentifier, std
   if (rv != 0){
     return -1;
   }
-  subList.push_back(std::pair<SubscriptionID, ContainerID>(sub.id,sub.subscribee->GetID()));
-  return 0;
+  SubscriptionReceipt rect;
+  rect.subID = sub.subID;
+  rect.msgID = sub.msgID;
+  rect.cont = sub.cont;
+
+  ReceiptElem elem;
+  elem.data = rect;
+  receipts.add(elem);
+  return elem.id;
 }
-
-
-int Component::SubscribeHelper(Subscription &sub, SubscriptionID msgIdentifier, std::string contIdentifier){
-  int rv = manager->Subscribe(sub, msgIdentifier, contIdentifier);
-  if (rv != 0){
-    return -1;
-  }
-  subList.push_back(std::pair<SubscriptionID, ContainerID>(sub.id,sub.subscribee->GetID()));
-  return 0;
-}
-
 
 int Component::SubscribeHelper(Subscription &sub, std::string msgIdentifier, ContainerID contIdentifier){
   int rv = manager->Subscribe(sub, msgIdentifier, contIdentifier);
   if (rv != 0){
     return -1;
   }
-  subList.push_back(std::pair<SubscriptionID, ContainerID>(sub.id,sub.subscribee->GetID()));
-  return 0;
+  SubscriptionReceipt rect;
+  rect.subID = sub.subID;
+  rect.msgID = sub.msgID;
+  rect.cont = sub.cont;
+
+  ReceiptElem elem;
+  elem.data = rect;
+  receipts.add(elem);
+  return elem.id;
 }
+
+int Component::SubscribeHelper(Subscription &sub, SubscriptionID msgIdentifier, std::string contIdentifier){
+  int rv = manager->Subscribe(sub, msgIdentifier, contIdentifier);
+  if (rv != 0){
+    return -1;
+  }
+  SubscriptionReceipt rect;
+  rect.subID = sub.subID;
+  rect.msgID = sub.msgID;
+  rect.cont = sub.cont;
+
+  ReceiptElem elem;
+  elem.data = rect;
+  receipts.add(elem);
+  return elem.id;
+}
+
+
 
 
 int Component::SubscribeHelper(Subscription &sub, SubscriptionID msgIdentifier, ContainerID contIdentifier){
@@ -86,21 +110,27 @@ int Component::SubscribeHelper(Subscription &sub, SubscriptionID msgIdentifier, 
   if (rv != 0){
     return -1;
   }
-  subList.push_back(std::pair<SubscriptionID, ContainerID>(sub.id,sub.subscribee->GetID()));
-  return 0;
+  SubscriptionReceipt rect;
+  rect.subID = sub.subID;
+  rect.msgID = sub.msgID;
+  rect.cont = sub.cont;
+
+  ReceiptElem elem;
+  elem.data = rect;
+  receipts.add(elem);
+  return elem.id;
 }
 
-int Component::UnsubscribeHelper(std::string subIdentifier, std::string contIdentifier){
-  return manager->Unsubscribe(subIdentifier, contIdentifier);
-}
-int Component::UnsubscribeHelper(std::string subIdentifier, ContainerID contIdentifier){
-  return manager->Unsubscribe(subIdentifier, contIdentifier);
-}
-int Component::UnsubscribeHelper(SubscriptionID subIdentifier, std::string contIdentifier){
-  return manager->Unsubscribe(subIdentifier, contIdentifier);
-}
-int Component::UnsubscribeHelper(SubscriptionID subIdentifier, ContainerID contIdentifier){
-  return manager->Unsubscribe(subIdentifier, contIdentifier);
+
+int Component::UnsubscribeContainerMessage(ReceiptID rectID){
+  assert(this->manager != NULL);
+  ReceiptElem elem;
+  elem.id = rectID;
+  receipts.get(elem);
+
+  SubscriptionReceipt rect;
+  rect = elem.data;
+  return manager->Unsubscribe(rect);
 }
 
 

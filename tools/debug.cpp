@@ -12,8 +12,11 @@ void bx::DebugLog(DebugLevel lvl, std::string event, std::string message){
 
     case BLOX_ERROR:
       std::cout << "ERROR:\t";
+      errors++;
       break;
   }
 
   std::cout << "--" + event + "--\t" + message << std::endl;
 }
+
+uint32_t bx::errors = 0;

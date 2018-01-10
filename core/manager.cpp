@@ -12,6 +12,14 @@ Manager::Manager(std::string contName) : Container (contName){
 }
 
 
+int Manager::Unsubscribe(SubscriptionReceipt &rect){
+  Container * cont = GetManagedContainer(rect.cont->GetID());
+  if (cont == NULL){
+    return -1;
+  }
+  return cont->RemoveSubscription(rect);
+}
+
 int Manager::RegisterContainer(Container * cont){
   ContainerItem item(cont, cont->GetName());
   int rv = this->managedContainers.add(item);
@@ -21,7 +29,7 @@ int Manager::RegisterContainer(Container * cont){
     #endif
     return -1;
   }
-  
+
   cont->SetID(item.id);
   return 0;
 }

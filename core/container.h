@@ -19,7 +19,31 @@ public:
   // Name Must be provided upon instantiation
   Container(std::string name): name(name){}
   // Allow destructor to be overriden
-  virtual ~Container(){}
+  virtual ~Container(){
+    if (this->manager != NULL){
+      this->RemovedFromManager();
+    }
+    for (auto iter = components.begin(); iter != components.end(); iter++){
+      Component * comp = GetComponent(iter->second);
+      if (comp == NULL){
+        #ifdef BLOX_DEBUG
+        DebugLog(BLOX_ERROR, "Component Failed Destructor", this->Print());
+        #endif
+      }
+      comp->SetParent(NULL);
+    }
+
+    for (auto iter = containers.begin(); iter != containers.end(); iter++){
+      Container * cont = GetContainer(iter->second);
+      if (cont == NULL){
+        #ifdef BLOX_DEBUG
+        DebugLog(BLOX_ERROR, "Container Failed Desctructor", this->Print());
+        #endif
+      }
+      cont->SetParent(NULL);
+    }
+
+  }
 
   // Getters
   ContainerID GetID(); //TODO look into how to handle ID's
@@ -50,17 +74,18 @@ public:
 
   friend class Manager;
 
+  int RemovedFromManager();
 private:
   int AddedToManager(Manager * manager);
-  int RemovedFromManager();
   void SetParent(Container * cont);
   void SetID(ContainerID contID);
 
   // Publishing and Subscription System for Intra Entity communication
   int AddSubscription(Subscription &sub, std::string subName);
   int AddSubscription(Subscription &sub, SubscriptionID subID);
-  template <typename T>
-  int RemoveSubscription(T subIdentifier);
+  int RemoveSubscription(SubscriptionReceipt &rect);
+  //template <typename T>
+  //int RemoveSubscription(T subIdentifier);
   template <typename T>
   int PublishMessageLocally(Message & msg, T subIdentifier);
   template <typename T>
@@ -71,7 +96,7 @@ private:
   Container * parent = NULL;
   const std::string name;
   ContainerID id;
-  labeled_box<MessageID,std::vector<Subscription>*> subscriptions;
+  labeled_box<MessageID,box<SubscriptionID,Subscription>*> subscriptions;
   labeled_box<ContainerID,Container*> containers;
   labeled_box<ComponentID,Component*> components;
 };
@@ -95,8 +120,8 @@ int Container::RemoveContainer(T contIdentifier){
     return NULL;
   }
 
+  cont->RemovedFromManager(); //TODO consider rv
   cont->SetParent(NULL);
-  cont->RemovedFromManager();
 
   #ifdef BLOX_DEBUG
   DebugLog(BLOX_ACTIVITY, "Container Removed", cont->GetName());
@@ -135,48 +160,31 @@ int Container::RemoveComponent(T compIdentifier){
   return this->components.remove(item, compIdentifier);
 }
 
-template <typename T>
-int Container::RemoveSubscription(T subIdentifier){
-  SubscriptionItem item;
-  int rv = subscriptions.remove(item, subIdentifier);
-  if (rv != 0){
-    #ifdef BLOX_DEBUG
-    DebugLog(BLOX_ERROR, "Subscription Failed Remove", this->GetName());
-    #endif
-    return -1;
-  }
-  return 0;
-}
-
 
 
 template <typename T>
 int Container::PublishMessageLocally(Message & msg, T subIdentifier){
-  SubscriptionItem item;
+  MessageItem item;
   int rv = subscriptions.get(item, subIdentifier);
   if (rv != 0){
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ERROR, "Publish Failed; No Subscriptions", GetName());
+    #endif
     return rv;
   }
 
-  std::vector<Subscription> * subs = item.data;
-  for (unsigned int i = 0; i < subs->size(); i++){
-      subs->at(i).callback(msg);
+  box<SubscriptionID,Subscription>* subs = item.data;
+
+  for (auto iter = subs->begin(); iter!=subs->end(); iter++){
+    SubscriptionElem elem;
+    elem.id = iter->second;
+    subs->get(elem);
+    elem.data.callback(msg);
   }
   return 0;
 }
 
 
-template <typename T>
-int Container::PublishMessageRecursively(Message  & msg, T subIdentifier){
-  int rv;
-  Container * cont;
-  for (auto iter = containers.begin(); iter != containers.end(); iter++){
-    Container * cont = GetContainer(iter->second);
-    rv |= cont->PublishMessageRecursively(msg, subIdentifier);
-  }
-  rv |= PublishMessageLocally(msg, subIdentifier);
-  return rv;
-}
 
 }
 

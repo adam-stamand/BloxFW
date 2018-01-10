@@ -12,6 +12,8 @@ enum DebugLevel{
   BLOX_ERROR
 };
 
+extern uint32_t errors;
+
 void DebugLog(DebugLevel lvl, std::string event, std::string message);
 
 

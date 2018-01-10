@@ -70,19 +70,7 @@ int Container::AddedToManager(Manager * manager){
 
 
 int Container::RemovedFromManager(){
-  this->manager->DeregisterContainer(this);
-  this->manager = NULL;
-
-  for (auto iter = containers.begin(); iter != containers.end(); iter++){
-    Container * cont = GetContainer(iter->second);
-    if (cont == NULL){
-      #ifdef BLOX_DEBUG
-      DebugLog(BLOX_ERROR, "Container Failed UnInit", this->Print());
-      #endif
-      return -1;
-    }
-    cont->RemovedFromManager();
-  }
+  int rv = 0;
 
   for (auto iter = components.begin(); iter != components.end(); iter++){
     Component * comp = GetComponent(iter->second);
@@ -94,6 +82,27 @@ int Container::RemovedFromManager(){
     }
     comp->RemovedFromManager();
   }
+
+  for (auto iter = containers.begin(); iter != containers.end(); iter++){
+    Container * cont = GetContainer(iter->second);
+    if (cont == NULL){
+      #ifdef BLOX_DEBUG
+      DebugLog(BLOX_ERROR, "Container Failed UnInit", this->Print());
+      #endif
+      return -1;
+    }
+    cont->RemovedFromManager();
+  }
+  //TODO Remove all subscriptions to container? --Yes
+  for (auto iter = subscriptions.begin(); iter != subscriptions.end(); iter++){
+    MessageItem item;
+    item.id = iter->second;
+    rv = subscriptions.remove(item, item.id); //TODO check rv
+    //delete(item.data);
+  }
+
+  this->manager->DeregisterContainer(this);
+  this->manager = NULL;
   return 0;
 
 }
@@ -157,17 +166,19 @@ int Container::AddComponents(std::vector<Component*> comps){
 }
 
 
-int Container::AddSubscription(Subscription &sub, SubscriptionID subID){
-  SubscriptionItem item;
+int Container::AddSubscription(Subscription &sub, SubscriptionID subID){ // TODO does this need to exist
+  MessageItem item;
   int rv = subscriptions.get(item, subID);
   if (rv != 0){
     DebugLog(BLOX_ERROR, "Failed Add Subscription", this->Print());
     return rv; //TODO
   }
+  SubscriptionElem elem;
+  elem.data = sub;
+  item.data->add(elem);
 
-  item.data->push_back(sub);
-  sub.id = item.id;
-
+  sub.subID = elem.id;
+  sub.msgID = item.id;
   #ifdef BLOX_DEBUG
   DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : "  + item.name);
   #endif
@@ -175,23 +186,47 @@ int Container::AddSubscription(Subscription &sub, SubscriptionID subID){
 }
 
 
-int Container::AddSubscription(Subscription &sub, std::string subName){
-  SubscriptionItem item;
-  int rv = subscriptions.get(item, subName);
+int Container::AddSubscription(Subscription &sub, std::string msgName){
+  MessageItem item;
+  int rv = subscriptions.get(item, msgName);
   if (rv != 0){
-    item.data = new(std::vector<Subscription>);
-    item.name = subName;
+    item.data = new(box<SubscriptionID,Subscription>);
+    item.name = msgName;
     rv = subscriptions.add(item);
     if (rv != 0){
       DebugLog(BLOX_ERROR, "Failed Add Subscription", this->Print());
       return rv; //TODO
     }
   }
+  SubscriptionElem elem;
+  elem.data = sub;
+  item.data->add(elem);
 
-  item.data->push_back(sub);
-  sub.id = item.id;
+  sub.subID = elem.id;
+  sub.msgID = item.id;
   #ifdef BLOX_DEBUG
   DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : "  + item.name);
   #endif
+  return 0;
+}
+
+
+
+int Container::RemoveSubscription(SubscriptionReceipt &rect){
+  MessageItem item;
+  int rv = subscriptions.get(item, rect.msgID);
+  if (rv != 0){
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ERROR, "Subscription Failed Remove", this->GetName());
+    #endif
+    return -1;
+  }
+  if (item.data->size() <= 1){
+    rv = subscriptions.remove(item, item.id); // Remove entire box if only one elemnt left
+    return rv;
+  }
+  SubscriptionElem elem;
+  elem.id = rect.subID;
+  item.data->remove(elem); // TODO check return value
   return 0;
 }

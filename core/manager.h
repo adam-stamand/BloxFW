@@ -16,22 +16,28 @@ class Manager : public Container
 {
 public:
   Manager(std::string contName);
-  ~Manager(){}
+  ~Manager(){
+    this->manager = NULL;
+  }
 
   // Modify Containers //TODO look into merging getting and removing from container and manager
   template <typename T>
   Container * GetManagedContainer(T contIdentifier);
-  template <typename T>
-  Container * RemoveManagedContainer(T contIdentifier);
+  //template <typename T>
+  //Container * RemoveManagedContainer(T contIdentifier);
 
   // Modify Containers
   template <typename T1, typename T2>
   Component * GetManagedComponent(T1 compIdentifier, T2 parentIdentifier);
-  template <typename T1, typename T2>
-  Component * RemoveManagedComponent(T1 compIdentifier, T2 parentIdentifier);
+  //template <typename T1, typename T2>
+  //Component * RemoveManagedComponent(T1 compIdentifier, T2 parentIdentifier);
 
 
+  friend class Component;
 
+  friend class Container;
+
+private:
 
 
   // Messaging Interface // TODO Protext these as well
@@ -40,19 +46,15 @@ public:
   template <typename T>
   int Subscribe(Subscription &sub, T subIdentifier){return Subscribe(sub, subIdentifier, this->GetID());}
 
-  template <typename T1, typename T2>
-  int Unsubscribe(T1 subIdentifier, T2 parentIdentifier);
-  template <typename T>
-  int Unsubscribe(T subIdentifier){return Subscribe(subIdentifier, this->GetID());}
+
+  int Unsubscribe(SubscriptionReceipt &rect);
+  //template <typename T>
+  //int Unsubscribe(T subIdentifier){return Subscribe(subIdentifier, this->GetID());}
 
   template <typename T1, typename T2>
   int Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier);
   template <typename T>
   int Publish(Message  & msg, T subIdentifier){return Publish(msg, subIdentifier, this->GetID());}
-
-  friend class Container;
-
-private:
   // TODO Protext these
   int RegisterContainer(Container * cont);
   int DeregisterContainer(Container * cont);
@@ -75,7 +77,7 @@ Container * Manager::GetManagedContainer(T contIdentifier){
   return item.data;
 }
 
-
+/*
 // Modify Containers
 template <typename T>
 Container * Manager::RemoveManagedContainer(T contIdentifier){
@@ -85,7 +87,7 @@ Container * Manager::RemoveManagedContainer(T contIdentifier){
   }
   return cont->GetParent()->RemoveContainer(cont->GetID());
 }
-
+*/
 
 // Modify Containers
 template <typename T1, typename T2>
@@ -104,18 +106,11 @@ int Manager::Subscribe(Subscription &sub, T1 subIdentifier, T2 parentIdentifier)
   if (cont == NULL){
     return -1;
   }
-  sub.subscribee = cont;
+  sub.cont = cont;
   return cont->AddSubscription(sub, subIdentifier);
 }
 
-template <typename T1, typename T2>
-int Manager::Unsubscribe(T1 subIdentifier, T2 parentIdentifier){
-  Container * cont = GetManagedContainer(parentIdentifier);
-  if (cont == NULL){
-    return -1;
-  }
-  return cont->RemoveSubscription(subIdentifier);
-}
+
 
 
 template <typename T1, typename T2>
@@ -124,8 +119,7 @@ int Manager::Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier){
   if (cont == NULL){
     return -1;
   }
-  cont->PublishMessageLocally(msg, subIdentifier);
-  return 0;
+  return cont->PublishMessageLocally(msg, subIdentifier);
 }
 
 

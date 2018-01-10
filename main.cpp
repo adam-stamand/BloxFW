@@ -9,7 +9,6 @@ class GameComponent : public Component
 {
 public:
   GameComponent(std::string name) : Component(name){}
-  ~GameComponent(){}
 
   virtual void Update(){};
 
@@ -111,7 +110,7 @@ private:
 class Entity : public Container{
 public:
   Entity(std::string name) : Container(name){}
-  virtual ~Entity(){}
+
 
   void Update(){
     for (auto iter = cont_begin(); iter != cont_end(); iter++){
@@ -157,12 +156,12 @@ public:
   TestComponent(int num, std::string name) : Component(name) {testValue = num;}
 
   void UserInit(){
-    //SubscribeToContainerMessage(&TestComponent::Test, GetName(), std::to_string(testValue-1));
+    SubscribeToContainerMessage(&TestComponent::Test, GetName(), std::to_string(testValue));
     SubscribeToContainerMessage(&TestComponent::BIG, "BIG", 0);
   }
 
   void Update(){
-    TestPublish();
+    //TestPublish();
   }
 
   void BIG(Message & msg){
@@ -180,11 +179,12 @@ public:
 
 
   void TestPublish(){
-    if (testValue-1 < 0){return;}
+    //if (testValue <= 0){return;}
     TestMessage test;
-    PublishMessageToContainer(test, GetName(), testValue-1);
+    int rv = PublishMessageToContainer(test, GetName(), std::to_string(testValue-1));
+    if (rv != 0) return;
     if (test.test != testValue-1){
-      puts("FUCKED");
+      printf("Component %s; Parent %s - Publish Failed. Expected:%d Got:%d\n", GetName().c_str(), GetParent()->GetName().c_str(), testValue-1, test.test);
     }
   }
 
@@ -211,7 +211,8 @@ public:
     }
 
     for (auto iter = comp_begin(); iter != comp_end(); iter++){
-      TestComponent *testComp = static_cast<TestComponent*>(GetComponent(iter->second));
+      Component * comp = GetComponent(iter->second);
+      TestComponent *testComp = static_cast<TestComponent*>(comp);
       testComp->Update();
     }
   }
@@ -243,6 +244,7 @@ public:
 // Find better way to print debug messages
 // Clean up core interfaces
 // test it out
+// Memory leaks
 
 
 void BuildTree(int num, Container * cont){
@@ -251,10 +253,9 @@ void BuildTree(int num, Container * cont){
   for (int i = 0; i < 3; i++){
     TestContainer * tempCont = new TestContainer(std::to_string(global_cnt));
     cont->AddContainer(tempCont);
-    for (int j = 0; j < 10; j++){
+    for (int j = 0; j < 3; j++){
       TestComponent * tempComp = new TestComponent(global_cnt,std::to_string(j));
       tempCont->AddComponents({tempComp});
-      //tempComp->TestPublish();
     }
 
     global_cnt++;
@@ -275,22 +276,36 @@ void DestroyTree(Container * cont){
 
 
 int main(void){
-  TestManager * sup = new TestManager("supervisor");
-  Entity * characters = new Entity("Characters");
-  Entity * vehicles = new Entity("Vehicles");
+  //TestManager * sup = new TestManager("supervisor");
+  //Entity * characters = new Entity("Characters");
+  //Entity * vehicles = new Entity("Vehicles");
 
-  Entity * car = new Entity("Car");
-  Entity * rocket = new Entity("Rocket");
-  Entity * enemy = new Entity("Enemy");
-  Entity * player = new Entity("Player");
+  //Entity * car = new Entity("Car");
+  //Entity * rocket = new Entity("Rocket");
+  //Entity * enemy = new Entity("Enemy");
+  //Entity * player = new Entity("Player");
 
 
-  BuildTree(1, sup);
+  //BuildTree(1, sup);
 
   //sup->Update();
 
-  DestroyTree(sup);
+  //DestroyTree(sup);
   //sup->Update();
+  TestComponent * physics = new TestComponent(0, "physics");
+  TestContainer * testCont = new TestContainer("test");
+  delete(physics);
+  delete(testCont);
+  //delete(sup);//->RemovedFromManager();
+/*
+  delete(sup);
+  delete(characters);
+  delete(vehicles);
+  delete(car);
+  delete(rocket);
+  delete(enemy);
+  printf("Errors:%d\n", errors);
+*/
 
 /*
   sup->AddContainer(characters);

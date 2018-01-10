@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <list>
+#include <map>
 
 namespace bx{
 
@@ -12,6 +13,7 @@ template <typename ID, typename DATA>
     DATA data;
     _Element(ID id) : id(id){}
     _Element(DATA data) : data(data){}
+    _Element(){}
   };
 
 
@@ -27,12 +29,16 @@ public:
   int add(Element &item);
   int remove(Element &item);
   int get(Element &item);
+  typename std::map<ID,ID>::const_iterator end(){return occupants.end();}
+  typename std::map<ID,ID>::const_iterator begin(){return occupants.begin();}
+
 
   size_t  size();
   void print(); // for debug TODO pass in function pointer that prints single element
 
 private:
   std::vector<DATA> vec;
+  std::map<ID, ID> occupants; //TODO fix this; don't use map
   std::list<ID> vacancies;
 };
 
@@ -52,6 +58,7 @@ int box<ID,DATA>::add(Element &item){
     item.id = vec.size();
     vec.push_back(item.data);
   }
+  occupants.insert(std::pair<ID,ID>(item.id, item.id));
   return 0;
 }
 
@@ -64,12 +71,18 @@ int box<ID,DATA>::get(Element &item){
 template <typename ID, typename DATA>
 int box<ID,DATA>::remove(Element &item){
   vacancies.push_back(item.id);
+  
+  auto iter = occupants.find(item.id);
+  if (iter == occupants.end()){
+    return -1;
+  }
+  occupants.erase(iter);
   return 0;
 }
 
 template <typename ID, typename DATA>
 size_t box<ID,DATA>::size(){
-  return vec.size();
+  return occupants.size();
 }
 
 template <typename ID, typename DATA>

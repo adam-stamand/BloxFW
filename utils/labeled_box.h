@@ -31,12 +31,12 @@ public:
 
   int     add(Item &item);
   template <typename T>
-  int     remove(Item &item, T identifier);
+  int     remove(Item &item, T identifier); 
   template <typename T>
   int     get(Item &item, T identifier);
 
-  typename std::map<std::string, ID>::iterator begin(){return labelMap.begin();}
-  typename std::map<std::string, ID>::iterator end(){return labelMap.end();}
+  typename std::map<std::string, ID>::const_iterator begin(){return labelMap.begin();}
+  typename std::map<std::string, ID>::const_iterator end(){return labelMap.end();}
   size_t  size(){return labelMap.size();}
 
 private:

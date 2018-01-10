@@ -17,6 +17,7 @@ public:
     Component * publisher;
 };
 
+typedef uint32_t ReceiptID;
 typedef uint32_t MessageID;
 typedef uint32_t ComponentID;
 typedef uint32_t ContainerID;
@@ -28,15 +29,23 @@ typedef std::function<void(Message &)> MessageFunction;
 struct Subscription{
   Component * subscriber;
   MessageFunction callback;
-  SubscriptionID id;
-  Container * subscribee;
+
+  SubscriptionID subID;
+  MessageID msgID;
+  Container * cont;
 };
 
-typedef _Item<SubscriptionID, std::vector<Subscription>*> SubscriptionItem;
+struct SubscriptionReceipt{
+  MessageID msgID;
+  SubscriptionID subID;
+  Container * cont;
+}; // TODO put recipte inside subscipritons
+
+typedef _Element<SubscriptionID,Subscription> SubscriptionElem;
+typedef _Element<ReceiptID, SubscriptionReceipt> ReceiptElem;
+typedef _Item<MessageID, box<SubscriptionID,Subscription>*> MessageItem;
 typedef _Item<ContainerID, Container*> ContainerItem;
 typedef _Item<ComponentID, Component*> ComponentItem;
-typedef _Item<MessageID, Message> MessageItem;
-
 
 }
 #endif
