@@ -28,7 +28,7 @@ public:
   Physics(std::string name):GameComponent(name){}
   ~Physics(){}
 
-  void AddedToManager(){
+  void UserInit(){
     SubscribeToContainerMessage(&Physics::Move, "move", this->GetParent()->GetID());
     SubscribeToContainerMessage(&Physics::GetPos, "get_pos", this->GetParent()->GetID());
   };
@@ -56,7 +56,7 @@ class Controls : public GameComponent
 public:
   Controls(std::string name):GameComponent(name){}
   ~Controls(){}
-  void AddedToManager(){
+  void UserInit(){
     //SubscribeToContainerMessage(&Person::Control, "Control", "manager");
   }
 
@@ -65,6 +65,10 @@ public:
     move.moveX = 5;
     move.moveY = 3;
     PublishMessageToContainer(move, "move", this->GetParent()->GetID());
+  }
+
+  void Update(){
+    UpArrowPressed();
   }
 
 };
@@ -82,7 +86,7 @@ class State : public GameComponent
 public:
   State(std::string name):GameComponent(name){}
   ~State(){}
-  void AddedToManager(){
+  void UserInit(){
     //SubscribeToContainerMessage(&Person::Control, "Control", "manager");
   }
 
@@ -92,6 +96,9 @@ public:
     printf("State: X position is %f, Y position is %f\n", move.moveX, move.moveY);
   }
 
+  void Update(){
+    PrintState();
+  }
 };
 
 class Entity : public Container{
@@ -100,8 +107,9 @@ public:
   virtual ~Entity(){}
 
   void Update(){
-    for (unsigned int i = 1; i < containers.size(); i++){
-
+    for (auto iter = components.begin(); iter != components.end(); iter++){
+      GameComponent *comp = static_cast<GameComponent*>(GetComponent(iter->second));
+      comp->Update();
     }
   };
 
@@ -113,17 +121,14 @@ int main(void){
   Controls * controls = new Controls("control");
   Physics * physics = new Physics("physics");
   State * state = new State("state");
-  Container * character = new Container("Character");
+  Entity * character = new Entity("Character");
 
   Manager manager("manager");
-  character->AddComponents({physics, controls, state});
   manager.AddContainer(character);
+  character->AddComponents({physics, controls, state});
+
+  character->Update();
 
 
-
-
-  //controls->UpArrowPressed();
-
-  //state->PrintState();
 
 }

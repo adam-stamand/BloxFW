@@ -13,7 +13,6 @@
 
 namespace bx{
 
-
 class Container
 {
 public:
@@ -72,7 +71,6 @@ protected:
 
 
 
-
 template <typename T>
 Container * Container::GetContainer(T contIdentifier){
   ContainerItem item;
@@ -98,7 +96,6 @@ int Container::RemoveContainer(T contIdentifier){
 
   return this->containers.remove(contIdentifier);
 }
-
 
 template <typename T>
 Component * Container::GetComponent(T compIdentifier){

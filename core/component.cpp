@@ -31,9 +31,7 @@ std::string Component::GetName(){
 
 
 std::string Component::Print(){
-  return "hi";
-  //return "Component: " + this->GetName() + "/" + std::to_string(this->GetID()) + "; Container: " + \
-  //manager->GetContainer(this->GetParentID())->GetName() + "/" + std::to_string(this->GetParentID()) + "; ";
+  return "Component: " + this->GetName() + "; Container: " + this->GetParent()->GetName();
 }
 
 

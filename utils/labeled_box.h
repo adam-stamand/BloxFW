@@ -61,9 +61,9 @@ int labeled_box<ID,DATA>::get(Item &item, T identifier){
   Element elem(iter->second);
   items.get(elem);
 
+  item.data = elem.data;
   item.name = iter->first;
   item.id = iter->second;
-  item.data = elem.data;
   return 0;
 }
 
@@ -77,9 +77,8 @@ int labeled_box<ID,DATA>::add(Item &item){
 
   Element elem(item.data);
   items.add(elem);
-  labelMap.insert(std::pair<std::string,ID>(item.name, elem.id));
-
-  item.id = iter->second;
+  item.id = elem.id;
+  labelMap.insert(std::pair<std::string,ID>(item.name, item.id));
   return 0;
 }
 

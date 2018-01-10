@@ -33,10 +33,7 @@ Manager * Container::GetManager(){
 
 
 std::string Container::Print(){
-  //return "Container: " + this->GetName() + "/" + std::to_string(this->GetID())   + \
-  //"; Parent Container: " + manager->GetContainer(this->GetParentID())->GetName() + \
-  //"/" + std::to_string(this->GetParentID()) + "; ";
-  return "hi";
+  return "Container: " + this->GetName() + "; Parent Container: " + (this->GetParent()->GetName());
 }
 
 int Container::AddedToManager(Manager * manager){
@@ -168,7 +165,7 @@ int Container::AddSubscription(Subscription &sub, SubscriptionID subID){
   item.data->push_back(sub);
 
   #ifdef BLOX_DEBUG
-   //DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : " );//+ subscriptions.get_label(subID) );
+  DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : "  + item.name);
   #endif
   return 0;
 }
@@ -190,7 +187,7 @@ int Container::AddSubscription(Subscription &sub, std::string subName){
   item.data->push_back(sub);
 
   #ifdef BLOX_DEBUG
-   //DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : " );//+ subscriptions.get_label(subID) );
+  DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : "  + item.name);
   #endif
   return 0;
 }
