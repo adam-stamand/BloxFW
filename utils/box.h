@@ -71,7 +71,7 @@ int box<ID,DATA>::get(Element &item){
 template <typename ID, typename DATA>
 int box<ID,DATA>::remove(Element &item){
   vacancies.push_back(item.id);
-  
+
   auto iter = occupants.find(item.id);
   if (iter == occupants.end()){
     return -1;

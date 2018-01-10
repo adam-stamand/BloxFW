@@ -7,6 +7,11 @@
 using namespace bx;
 
 
+
+void Component::RemoveFromParent(){
+  this->GetParent()->RemoveComponent(GetName()); //TODO consider adding component ID for this
+}
+
 void Component::SetParent(Container * cont){
   this->parent = cont;
 }

@@ -24,8 +24,11 @@ class Component
 public:
   Component(std::string compName) : name(compName){} // Must give Component Name upon instantiation
   virtual ~Component(){
-    
-  }; // Allow destructor to be overriden //TODO ensure this can't be ovreeriden
+    this->RemoveFromParent();
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ACTIVITY, "Component Deleted", GetName());
+    #endif
+  }; // Allow destructor to be overriden
 
 
   // Getters
@@ -53,7 +56,7 @@ public:
 
 
 private:
-
+  void RemoveFromParent();
   ComponentID GetParentID(); //TODO fix hack maybe?
   virtual void UserInit(){}; // User can define behavior when component is added to Manager
   void AddedToManager(Manager * manager);

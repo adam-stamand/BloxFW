@@ -157,7 +157,7 @@ public:
 
   void UserInit(){
     SubscribeToContainerMessage(&TestComponent::Test, GetName(), std::to_string(testValue));
-    SubscribeToContainerMessage(&TestComponent::BIG, "BIG", 0);
+    //SubscribeToContainerMessage(&TestComponent::BIG, "BIG", 0);
   }
 
   void Update(){
@@ -268,15 +268,20 @@ void DestroyTree(Container * cont){
     TestContainer * testCont = static_cast<TestContainer*>(cont->GetContainer(iter->second));
     DestroyTree(testCont);
   }
-  for (auto iter = cont->cont_begin(); iter != cont->cont_end(); iter++){
-    cont->RemoveContainer(iter->second);
+
+  for (auto iter = cont->comp_begin(); iter != cont->comp_end(); iter++){
+    //cont->RemoveContainer(iter->second);
+    TestComponent * testComp = static_cast<TestComponent*>(cont->GetComponent(iter->second));
+    delete(testComp);
   }
+
+  delete(cont);
 }
 
 
 
 int main(void){
-  //TestManager * sup = new TestManager("supervisor");
+  TestManager * sup = new TestManager("supervisor");
   //Entity * characters = new Entity("Characters");
   //Entity * vehicles = new Entity("Vehicles");
 
@@ -286,18 +291,12 @@ int main(void){
   //Entity * player = new Entity("Player");
 
 
-  //BuildTree(1, sup);
+  BuildTree(1, sup);
 
   //sup->Update();
 
-  //DestroyTree(sup);
-  //sup->Update();
-  TestComponent * physics = new TestComponent(0, "physics");
-  TestContainer * testCont = new TestContainer("test");
-  delete(physics);
-  delete(testCont);
-  //delete(sup);//->RemovedFromManager();
-/*
+  DestroyTree(sup);
+  /*
   delete(sup);
   delete(characters);
   delete(vehicles);

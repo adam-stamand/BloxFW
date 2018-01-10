@@ -222,7 +222,8 @@ int Container::RemoveSubscription(SubscriptionReceipt &rect){
     return -1;
   }
   if (item.data->size() <= 1){
-    rv = subscriptions.remove(item, item.id); // Remove entire box if only one elemnt left
+    subscriptions.remove(item, item.id); // Remove entire box if only one elemnt left
+    delete(item.data);
     return rv;
   }
   SubscriptionElem elem;

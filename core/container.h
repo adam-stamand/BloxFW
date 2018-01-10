@@ -42,7 +42,9 @@ public:
       }
       cont->SetParent(NULL);
     }
-
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ACTIVITY, "Container Deleted", this->Print());
+    #endif
   }
 
   // Getters
