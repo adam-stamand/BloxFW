@@ -27,11 +27,6 @@ public:
 
   virtual void UserInit(){}; // User can define behavior when component is added to Manager
 
-  // Make friend functions
-  void AddedToManager(Manager * manager);
-  void RemovedFromManager();
-  void SetParent(Container * cont);
-
   // Getters
   std::string GetName();
   Container * GetParent();
@@ -50,8 +45,16 @@ public:
   int PublishMessageToContainer(Message &msg, T subIdentifier){return PublishMessageToContainer(subIdentifier, this->GetParentID());}
 
 
+
+
+  // Make friend functions //TODO
+  void AddedToManager(Manager * manager);
+  void RemovedFromManager();
+  void SetParent(Container * cont);
+
 private:
-  ComponentID GetParentID();
+  ComponentID GetParentID(); //TODO fix hack maybe?
+
   // Message Helpers
   int SubscribeHelper(Subscription &sub, std::string msgIdentifier, std::string contIdentifier);
   int SubscribeHelper(Subscription &sub, MessageID msgIdentifier, std::string contIdentifier);

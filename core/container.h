@@ -21,20 +21,15 @@ public:
   // Allow destructor to be overriden
   virtual ~Container(){}
 
-  // TODO make friend functions
-  int AddedToManager(Manager * manager);
-  int RemovedFromManager();
-  void SetParent(Container * cont);
-  void SetID(ContainerID contID);
   // Getters
-  ContainerID GetID();
+  ContainerID GetID(); //TODO look into how to handle ID's
   std::string GetName();
   Container * GetParent();
   Manager *   GetManager();
   std::string Print(); // for debug
 
   // Modify Components within Container
-  int AddComponents(std::vector<Component*> comps);
+  int AddComponents(std::vector<Component*> comps); //TODO look into return value
   template <typename T>
   Component * GetComponent(T compIdentifier);
   template <typename T>
@@ -46,7 +41,15 @@ public:
   template <typename T>
   int RemoveContainer(T contIdentifier);
 
+
+
+
   friend class Manager; //TODO wtf
+  // TODO make friend functions
+  int AddedToManager(Manager * manager);
+  int RemovedFromManager();
+  void SetParent(Container * cont);
+  void SetID(ContainerID contID);
 
 protected:
 
@@ -112,18 +115,18 @@ Component * Container::GetComponent(T compIdentifier){
 template <typename T>
 int Container::RemoveComponent(T compIdentifier){
   Component * comp = GetComponent(compIdentifier);
-  if (comp != NULL){
-    return NULL;
+  if (comp == NULL){
+    return -1;
   }
 
   comp->SetParent(NULL);
   comp->RemovedFromManager();
-
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Component Removed", comp->Print());
+  DebugLog(BLOX_ACTIVITY, "Component Removed", comp->GetName());
   #endif
 
-  return this->components.remove(compIdentifier);
+  ComponentItem item;
+  return this->components.remove(item, compIdentifier);
 }
 
 

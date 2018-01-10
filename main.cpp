@@ -116,17 +116,39 @@ public:
 
 };
 
+// Add unsubscribe and make sure remove component calls it
+// Make friend functions
+// FIgure out why manager has to be friend
+// Fix up Container interface //provide a safe way to iterate through labeled boxes
+// Test using ID's instead of names
+// Create message file with a bunch of message types
+// Change names to blocks and boxes
+// Find better way to print debug messages
+// Clean up core interfaces
+// test it out
+
 int main(void){
-
-  Controls * controls = new Controls("control");
-  Physics * physics = new Physics("physics");
-  State * state = new State("state");
+  Manager * manager = new Manager("manager");
   Entity * character = new Entity("Character");
+  Entity * enemy = new Entity("Enemy");
 
-  Manager manager("manager");
-  manager.AddContainer(character);
-  character->AddComponents({physics, controls, state});
+  manager->AddContainer(character);
+  character->AddContainer(enemy);
 
+  enemy->AddComponents({
+    new Controls("controls"),
+    new Physics("physics"),
+    new State("state"),
+  });
+
+
+  character->AddComponents({
+    new Controls("controls"),
+    new Physics("physics"),
+    new State("state"),
+  });
+
+  character->RemoveComponent("physics");
   character->Update();
 
 

@@ -18,7 +18,7 @@ public:
   Manager(std::string contName);
   ~Manager(){}
 
-  // Modify Containers
+  // Modify Containers //TODO look into merging getting and removing from container and manager
   template <typename T>
   Container * GetManagedContainer(T contIdentifier);
   template <typename T>
@@ -29,6 +29,10 @@ public:
   Component * GetManagedComponent(T1 compIdentifier, T2 parentIdentifier);
   template <typename T1, typename T2>
   Component * RemoveManagedComponent(T1 compIdentifier, T2 parentIdentifier);
+
+
+
+
 
   // Messaging Interface // TODO Protext these as well
   template <typename T1, typename T2>
