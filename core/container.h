@@ -42,31 +42,35 @@ public:
   int RemoveContainer(T contIdentifier);
 
 
+  std::map<std::string, ComponentID>::const_iterator comp_begin(){return components.begin();}
+  std::map<std::string, ComponentID>::const_iterator comp_end(){return components.end();}
 
+  std::map<std::string, ContainerID>::const_iterator cont_begin(){return containers.begin();}
+  std::map<std::string, ContainerID>::const_iterator cont_end(){return containers.end();}
 
-  friend class Manager; //TODO wtf
-  // TODO make friend functions
+  friend class Manager;
+
+private:
   int AddedToManager(Manager * manager);
   int RemovedFromManager();
   void SetParent(Container * cont);
   void SetID(ContainerID contID);
 
-protected:
-
   // Publishing and Subscription System for Intra Entity communication
   int AddSubscription(Subscription &sub, std::string subName);
   int AddSubscription(Subscription &sub, SubscriptionID subID);
   template <typename T>
-  int PublishMessageLocally(Message & msg, T msgIdentifier);
+  int RemoveSubscription(T subIdentifier);
   template <typename T>
-  int PublishMessageRecursively(Message  & msg, T msgIdentifier);
+  int PublishMessageLocally(Message & msg, T subIdentifier);
+  template <typename T>
+  int PublishMessageRecursively(Message  & msg, T subIdentifier);
 
   // Private Members
   Manager * manager = NULL;
   Container * parent = NULL;
   const std::string name;
   ContainerID id;
-
   labeled_box<MessageID,std::vector<Subscription>*> subscriptions;
   labeled_box<ContainerID,Container*> containers;
   labeled_box<ComponentID,Component*> components;
@@ -96,8 +100,8 @@ int Container::RemoveContainer(T contIdentifier){
   #ifdef BLOX_DEBUG
   DebugLog(BLOX_ACTIVITY, "Container Removed", cont->Print());
   #endif
-
-  return this->containers.remove(contIdentifier);
+  ContainerItem item;
+  return this->containers.remove(item, contIdentifier);
 }
 
 template <typename T>
@@ -128,6 +132,20 @@ int Container::RemoveComponent(T compIdentifier){
   ComponentItem item;
   return this->components.remove(item, compIdentifier);
 }
+
+template <typename T>
+int Container::RemoveSubscription(T subIdentifier){
+  SubscriptionItem item;
+  int rv = subscriptions.remove(item, subIdentifier);
+  if (rv != 0){
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ERROR, "Subscription Failed Remove", this->GetName());
+    #endif
+    return -1;
+  }
+  return 0;
+}
+
 
 
 template <typename T>

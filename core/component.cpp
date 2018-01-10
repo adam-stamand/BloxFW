@@ -43,29 +43,66 @@ void Component::AddedToManager(Manager * manager){
 
 
 void Component::RemovedFromManager(){
+  for (auto iter = subList.begin(); iter != subList.end(); iter++){
+    UnsubscribeContainerMessage(iter->first, iter->second); // TODO hadnle return value
+  }
   this->manager = NULL;
 }
 
 
 
 int Component::SubscribeHelper(Subscription &sub, std::string msgIdentifier, std::string contIdentifier){
-  return manager->Subscribe(sub, msgIdentifier, contIdentifier);
+  int rv = manager->Subscribe(sub, msgIdentifier, contIdentifier);
+  if (rv != 0){
+    return -1;
+  }
+  subList.push_back(std::pair<SubscriptionID, ContainerID>(sub.id,sub.subscribee->GetID()));
+  return 0;
 }
 
 
-int Component::SubscribeHelper(Subscription &sub, MessageID msgIdentifier, std::string contIdentifier){
-  return manager->Subscribe(sub, msgIdentifier, contIdentifier);
+int Component::SubscribeHelper(Subscription &sub, SubscriptionID msgIdentifier, std::string contIdentifier){
+  int rv = manager->Subscribe(sub, msgIdentifier, contIdentifier);
+  if (rv != 0){
+    return -1;
+  }
+  subList.push_back(std::pair<SubscriptionID, ContainerID>(sub.id,sub.subscribee->GetID()));
+  return 0;
 }
 
 
 int Component::SubscribeHelper(Subscription &sub, std::string msgIdentifier, ContainerID contIdentifier){
-  return manager->Subscribe(sub, msgIdentifier, contIdentifier);
+  int rv = manager->Subscribe(sub, msgIdentifier, contIdentifier);
+  if (rv != 0){
+    return -1;
+  }
+  subList.push_back(std::pair<SubscriptionID, ContainerID>(sub.id,sub.subscribee->GetID()));
+  return 0;
 }
 
 
-int Component::SubscribeHelper(Subscription &sub, MessageID msgIdentifier, ContainerID contIdentifier){
-  return manager->Subscribe(sub, msgIdentifier, contIdentifier);
+int Component::SubscribeHelper(Subscription &sub, SubscriptionID msgIdentifier, ContainerID contIdentifier){
+  int rv = manager->Subscribe(sub, msgIdentifier, contIdentifier);
+  if (rv != 0){
+    return -1;
+  }
+  subList.push_back(std::pair<SubscriptionID, ContainerID>(sub.id,sub.subscribee->GetID()));
+  return 0;
 }
+
+int Component::UnsubscribeHelper(std::string subIdentifier, std::string contIdentifier){
+  return manager->Unsubscribe(subIdentifier, contIdentifier);
+}
+int Component::UnsubscribeHelper(std::string subIdentifier, ContainerID contIdentifier){
+  return manager->Unsubscribe(subIdentifier, contIdentifier);
+}
+int Component::UnsubscribeHelper(SubscriptionID subIdentifier, std::string contIdentifier){
+  return manager->Unsubscribe(subIdentifier, contIdentifier);
+}
+int Component::UnsubscribeHelper(SubscriptionID subIdentifier, ContainerID contIdentifier){
+  return manager->Unsubscribe(subIdentifier, contIdentifier);
+}
+
 
 
 int Component::PublishHelper(Message & msg, std::string msgIdentifier, std::string contIdentifier){
@@ -73,7 +110,7 @@ int Component::PublishHelper(Message & msg, std::string msgIdentifier, std::stri
 }
 
 
-int Component::PublishHelper(Message  & msg, MessageID msgIdentifier, std::string contIdentifier){
+int Component::PublishHelper(Message  & msg, SubscriptionID msgIdentifier, std::string contIdentifier){
   return manager->Publish(msg, msgIdentifier, contIdentifier);
 }
 
@@ -83,6 +120,6 @@ int Component::PublishHelper(Message  & msg, std::string msgIdentifier, Containe
 }
 
 
-int Component::PublishHelper(Message & msg, MessageID msgIdentifier, ContainerID contIdentifier){
+int Component::PublishHelper(Message & msg, SubscriptionID msgIdentifier, ContainerID contIdentifier){
   return manager->Publish(msg, msgIdentifier, contIdentifier);
 }

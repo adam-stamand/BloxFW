@@ -41,15 +41,21 @@ public:
   int Subscribe(Subscription &sub, T subIdentifier){return Subscribe(sub, subIdentifier, this->GetID());}
 
   template <typename T1, typename T2>
+  int Unsubscribe(T1 subIdentifier, T2 parentIdentifier);
+  template <typename T>
+  int Unsubscribe(T subIdentifier){return Subscribe(subIdentifier, this->GetID());}
+
+  template <typename T1, typename T2>
   int Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier);
   template <typename T>
   int Publish(Message  & msg, T subIdentifier){return Publish(msg, subIdentifier, this->GetID());}
 
+  friend class Container;
+
+private:
   // TODO Protext these
   int RegisterContainer(Container * cont);
   int DeregisterContainer(Container * cont);
-
-private:
   // Modify Containers
   labeled_box<ContainerID, Container*> managedContainers;
 };
@@ -98,7 +104,17 @@ int Manager::Subscribe(Subscription &sub, T1 subIdentifier, T2 parentIdentifier)
   if (cont == NULL){
     return -1;
   }
+  sub.subscribee = cont;
   return cont->AddSubscription(sub, subIdentifier);
+}
+
+template <typename T1, typename T2>
+int Manager::Unsubscribe(T1 subIdentifier, T2 parentIdentifier){
+  Container * cont = GetManagedContainer(parentIdentifier);
+  if (cont == NULL){
+    return -1;
+  }
+  return cont->RemoveSubscription(subIdentifier);
 }
 
 

@@ -134,10 +134,13 @@ int Container::AddComponents(std::vector<Component*> comps){
     Component * comp = comps.at(i);
     assert(comp != NULL);
     int rv;
+
     comp->SetParent(this);
     if (this->manager != NULL){
       comp->AddedToManager(this->manager);
     }
+
+
     ComponentItem item(comp, comp->GetName());
     rv = components.add(item);
     if (rv != 0){
@@ -163,6 +166,7 @@ int Container::AddSubscription(Subscription &sub, SubscriptionID subID){
   }
 
   item.data->push_back(sub);
+  sub.id = item.id;
 
   #ifdef BLOX_DEBUG
   DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : "  + item.name);
@@ -185,7 +189,7 @@ int Container::AddSubscription(Subscription &sub, std::string subName){
   }
 
   item.data->push_back(sub);
-
+  sub.id = item.id;
   #ifdef BLOX_DEBUG
   DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : "  + item.name);
   #endif

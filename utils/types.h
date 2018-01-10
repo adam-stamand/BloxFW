@@ -22,16 +22,14 @@ typedef uint32_t ComponentID;
 typedef uint32_t ContainerID;
 typedef uint32_t SubscriptionID;
 
-//struct Message{
-//  Component * publisher;
-//  void * params;
-//};
 typedef std::function<void(Message &)> MessageFunction;
 
 
 struct Subscription{
   Component * subscriber;
   MessageFunction callback;
+  SubscriptionID id;
+  Container * subscribee;
 };
 
 typedef _Item<SubscriptionID, std::vector<Subscription>*> SubscriptionItem;

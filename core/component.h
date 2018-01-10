@@ -25,7 +25,6 @@ public:
   Component(std::string compName) : name(compName){} // Must give Component Name upon instantiation
   virtual ~Component(){}; // Allow destructor to be overriden
 
-  virtual void UserInit(){}; // User can define behavior when component is added to Manager
 
   // Getters
   std::string GetName();
@@ -40,32 +39,45 @@ public:
   int SubscribeToContainerMessage(void (T1::*f)(Message &), T2 subIdentifier) {return SubscribeToContainerMessage(f, subIdentifier, this->GetParentID());}
 
   template <class T1, class T2>
+  int UnsubscribeContainerMessage(T1 subIdentifier, T2 contIdentifier);
+  template <class T>
+  int UnsubscribeContainerMessage(T subIdentifier) {return UnsubscribeContainerMessage(subIdentifier, this->GetParentID());}
+
+  template <class T1, class T2>
   int PublishMessageToContainer(Message &msg, T1 subIdentifier, T2 contIdentifier);
   template <class T>
   int PublishMessageToContainer(Message &msg, T subIdentifier){return PublishMessageToContainer(subIdentifier, this->GetParentID());}
 
 
+  friend class Container;
 
 
+
+private:
+  virtual void UserInit(){}; // User can define behavior when component is added to Manager
   // Make friend functions //TODO
   void AddedToManager(Manager * manager);
   void RemovedFromManager();
   void SetParent(Container * cont);
-
-private:
   ComponentID GetParentID(); //TODO fix hack maybe?
 
-  // Message Helpers
-  int SubscribeHelper(Subscription &sub, std::string msgIdentifier, std::string contIdentifier);
-  int SubscribeHelper(Subscription &sub, MessageID msgIdentifier, std::string contIdentifier);
-  int SubscribeHelper(Subscription &sub, std::string msgIdentifier, ContainerID contIdentifier);
-  int SubscribeHelper(Subscription &sub, MessageID msgIdentifier, ContainerID contIdentifier);
+  std::list<std::pair<SubscriptionID, ContainerID>> subList;
 
+  // Message Helpers //TODO FIx this shit
+  int SubscribeHelper(Subscription &sub, std::string msgIdentifier, std::string contIdentifier);
+  int SubscribeHelper(Subscription &sub, SubscriptionID msgIdentifier, std::string contIdentifier);
+  int SubscribeHelper(Subscription &sub, std::string msgIdentifier, ContainerID contIdentifier);
+  int SubscribeHelper(Subscription &sub, SubscriptionID msgIdentifier, ContainerID contIdentifier);
+
+  int UnsubscribeHelper(std::string subIdentifier, std::string contIdentifier);
+  int UnsubscribeHelper(std::string subIdentifier, ContainerID contIdentifier);
+  int UnsubscribeHelper(SubscriptionID subIdentifier, std::string contIdentifier);
+  int UnsubscribeHelper(SubscriptionID subIdentifier, ContainerID contIdentifier);
 
   int PublishHelper(Message  & msg, std::string msgIdentifier, std::string contIdentifier);
-  int PublishHelper(Message  & msg, MessageID msgIdentifier, std::string contIdentifier);
+  int PublishHelper(Message  & msg, SubscriptionID msgIdentifier, std::string contIdentifier);
   int PublishHelper(Message  & msg, std::string msgIdentifier, ContainerID contIdentifier);
-  int PublishHelper(Message  & msg, MessageID msgIdentifier, ContainerID contIdentifier);
+  int PublishHelper(Message  & msg, SubscriptionID msgIdentifier, ContainerID contIdentifier);
 
   // Private members
   Container * parent  = NULL;
@@ -83,6 +95,12 @@ int Component::SubscribeToContainerMessage(void (T1::*f)(Message &), T2 subIdent
   sub.subscriber = this;
   sub.callback = function;
   return SubscribeHelper(sub, subIdentifier, contIdentifier);
+}
+
+template <class T1, class T2>
+int Component::UnsubscribeContainerMessage(T1 subIdentifier, T2 contIdentifier){
+  assert(this->manager != NULL);
+  return UnsubscribeHelper(subIdentifier, contIdentifier);
 }
 
 

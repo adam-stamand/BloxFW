@@ -1,5 +1,7 @@
 #include "core/manager.h"
+#include "messages.h"
 #include <stdio.h>
+#include <unistd.h>
 
 using namespace bx;
 
@@ -14,14 +16,6 @@ public:
 };
 
 
-class MovementMessage : public Message
-{
-public:
-  float moveX = 0;
-  float moveY = 0;
-};
-
-
 class Physics : public GameComponent
 {
 public:
@@ -29,25 +23,38 @@ public:
   ~Physics(){}
 
   void UserInit(){
-    SubscribeToContainerMessage(&Physics::Move, "move", this->GetParent()->GetID());
+    SubscribeToContainerMessage(&Physics::AddVelocity, "move", this->GetParent()->GetID());
     SubscribeToContainerMessage(&Physics::GetPos, "get_pos", this->GetParent()->GetID());
   };
 
-private:
-  float x = 0;
-  float y = 0;
+  void Update(){
+    y_pos -= 9.8; // apply gravity
+  }
 
-  void Move(Message & msg){
-    MovementMessage * move = static_cast<MovementMessage*>(&msg);
-    x += move->moveX;
-    y += move->moveY;
+private:
+  float x_pos = 0;
+  float y_pos = 0;
+
+
+  void AddVelocity(Message & msg){
+    VelocityMessage * vel = static_cast<VelocityMessage*>(&msg);
+    x_pos += vel->x;
+    y_pos += vel->y;
   }
 
   void GetPos(Message & msg){
-    MovementMessage * move = static_cast<MovementMessage*>(&msg);
-    move->moveX = x;
-    move->moveY = y;
+    PositionMessage * pos = static_cast<PositionMessage*>(&msg);
+    pos->x = x_pos;
+    pos->y = y_pos;
   }
+
+  void ApplyForce(Message & msg){
+    VectorMessage * vec = static_cast<VectorMessage*>(&msg);
+    // do math
+  }
+
+
+
 };
 
 
@@ -57,29 +64,24 @@ public:
   Controls(std::string name):GameComponent(name){}
   ~Controls(){}
   void UserInit(){
-    //SubscribeToContainerMessage(&Person::Control, "Control", "manager");
-  }
-
-  void UpArrowPressed(){
-    MovementMessage move;
-    move.moveX = 5;
-    move.moveY = 3;
-    PublishMessageToContainer(move, "move", this->GetParent()->GetID());
   }
 
   void Update(){
     UpArrowPressed();
   }
 
+
+private:
+
+  void UpArrowPressed(){
+    VelocityMessage vel;
+    vel.x = 0;
+    vel.y = 13;
+    PublishMessageToContainer(vel, "move", this->GetParent()->GetID());
+  }
+
 };
 
-/*
-class Graphics : public GameComponent
-{
-public:
-
-};
-*/
 
 class State : public GameComponent
 {
@@ -87,19 +89,24 @@ public:
   State(std::string name):GameComponent(name){}
   ~State(){}
   void UserInit(){
-    //SubscribeToContainerMessage(&Person::Control, "Control", "manager");
-  }
-
-  void PrintState(){
-    MovementMessage move;
-    PublishMessageToContainer(move, "get_pos", this->GetParent()->GetID());
-    printf("State: X position is %f, Y position is %f\n", move.moveX, move.moveY);
   }
 
   void Update(){
     PrintState();
   }
+
+private:
+
+  void PrintState(){
+    PositionMessage pos;
+    PublishMessageToContainer(pos, "get_pos", this->GetParent()->GetID());
+    printf("State: X position is %f, Y position is %f\n", pos.x, pos.y);
+  }
+
 };
+
+
+
 
 class Entity : public Container{
 public:
@@ -107,7 +114,12 @@ public:
   virtual ~Entity(){}
 
   void Update(){
-    for (auto iter = components.begin(); iter != components.end(); iter++){
+    for (auto iter = cont_begin(); iter != cont_end(); iter++){
+      Entity *ent = static_cast<Entity*>(GetContainer(iter->second));
+      ent->Update();
+    }
+
+    for (auto iter = comp_begin(); iter != comp_end(); iter++){
       GameComponent *comp = static_cast<GameComponent*>(GetComponent(iter->second));
       comp->Update();
     }
@@ -116,24 +128,178 @@ public:
 
 };
 
-// Add unsubscribe and make sure remove component calls it
-// Make friend functions
-// FIgure out why manager has to be friend
-// Fix up Container interface //provide a safe way to iterate through labeled boxes
+
+class Supervisor : public Manager
+{
+
+public:
+  Supervisor(std::string name) : Manager(name){}
+  virtual ~Supervisor(){}
+
+  void Update(){
+    for (auto iter = cont_begin(); iter != cont_end(); iter++){
+      Entity *ent = static_cast<Entity*>(GetContainer(iter->second));
+      ent->Update();
+    }
+  }
+
+};
+
+
+int global_cnt = 0;
+
+
+
+
+class TestComponent : public Component
+{
+public:
+  TestComponent(int num, std::string name) : Component(name) {testValue = num;}
+
+  void UserInit(){
+    SubscribeToContainerMessage(&TestComponent::Test, GetName(), std::to_string(testValue-1));
+    SubscribeToContainerMessage(&TestComponent::BIG, "BIG", 0);
+  }
+
+  void Update(){
+    TestPublish();
+  }
+
+  void BIG(Message & msg){
+    TestMessage * test = static_cast<TestMessage*>(&msg);
+    if (test->test != 100){
+      puts("FCUKED AGAIN");
+    }
+  }
+
+  void TestBIG(){
+    TestMessage test;
+    test.test = 100;
+    PublishMessageToContainer(test, "BIG", 0);
+  }
+
+
+  void TestPublish(){
+    if (testValue-1 < 0){return;}
+    TestMessage test;
+    PublishMessageToContainer(test, GetName(), testValue-1);
+    if (test.test != testValue-1){
+      puts("FUCKED");
+    }
+  }
+
+private:
+  int testValue = 0;
+
+  void Test(Message & msg){
+    TestMessage * test = static_cast<TestMessage*>(&msg);
+    test->test = testValue;
+  }
+};
+
+class TestContainer : public Container
+{
+
+public:
+  TestContainer(std::string name) : Container(name){}
+
+  void Update(){
+
+    for (auto iter = cont_begin(); iter != cont_end(); iter++){
+      TestContainer *testCont = static_cast<TestContainer*>(GetContainer(iter->second));
+      testCont->Update();
+    }
+
+    for (auto iter = comp_begin(); iter != comp_end(); iter++){
+      TestComponent *testComp = static_cast<TestComponent*>(GetComponent(iter->second));
+      testComp->Update();
+    }
+  }
+};
+
+
+class TestManager : public Manager
+{
+
+public:
+  TestManager(std::string name) : Manager(name){}
+  virtual ~TestManager(){}
+
+  void Update(){
+    TestContainer *testCont;
+    for (auto iter = cont_begin(); iter != cont_end(); iter++){
+      testCont = static_cast<TestContainer*>(GetContainer(iter->second));
+      testCont->Update();
+    }
+    TestComponent * temp = static_cast<TestComponent*>(testCont->GetComponent(0));
+    temp->TestBIG();
+  }
+
+};
+
+
 // Test using ID's instead of names
-// Create message file with a bunch of message types
 // Change names to blocks and boxes
 // Find better way to print debug messages
 // Clean up core interfaces
 // test it out
 
-int main(void){
-  Manager * manager = new Manager("manager");
-  Entity * character = new Entity("Character");
-  Entity * enemy = new Entity("Enemy");
 
-  manager->AddContainer(character);
-  character->AddContainer(enemy);
+void BuildTree(int num, Container * cont){
+  if (num <= 0) return;
+
+  for (int i = 0; i < 3; i++){
+    TestContainer * tempCont = new TestContainer(std::to_string(global_cnt));
+    cont->AddContainer(tempCont);
+    for (int j = 0; j < 10; j++){
+      TestComponent * tempComp = new TestComponent(global_cnt,std::to_string(j));
+      tempCont->AddComponents({tempComp});
+      //tempComp->TestPublish();
+    }
+
+    global_cnt++;
+    BuildTree(num-1, tempCont);
+  }
+}
+
+void DestroyTree(Container * cont){
+  for (auto iter = cont->cont_begin(); iter != cont->cont_end(); iter++){
+    TestContainer * testCont = static_cast<TestContainer*>(cont->GetContainer(iter->second));
+    DestroyTree(testCont);
+  }
+  for (auto iter = cont->cont_begin(); iter != cont->cont_end(); iter++){
+    cont->RemoveContainer(iter->second);
+  }
+}
+
+
+
+int main(void){
+  TestManager * sup = new TestManager("supervisor");
+  Entity * characters = new Entity("Characters");
+  Entity * vehicles = new Entity("Vehicles");
+
+  Entity * car = new Entity("Car");
+  Entity * rocket = new Entity("Rocket");
+  Entity * enemy = new Entity("Enemy");
+  Entity * player = new Entity("Player");
+
+
+  BuildTree(3, sup);
+
+  sup->Update();
+
+  DestroyTree(sup);
+  sup->Update();
+
+/*
+  sup->AddContainer(characters);
+  sup->AddContainer(vehicles);
+
+  characters->AddContainer(enemy);
+  characters->AddContainer(player);
+  vehicles->AddContainer(rocket);
+  vehicles->AddContainer(car);
 
   enemy->AddComponents({
     new Controls("controls"),
@@ -141,16 +307,40 @@ int main(void){
     new State("state"),
   });
 
-
-  character->AddComponents({
+  player->AddComponents({
     new Controls("controls"),
     new Physics("physics"),
     new State("state"),
   });
 
-  character->RemoveComponent("physics");
-  character->Update();
+  rocket->AddComponents({
+    new Physics("physics"),
+    new State("state"),
+  });
 
+  car->AddComponents({
+    new Physics("physics"),
+    new State("state"),
+  });
+
+*/
+/*
+  for (int i = 0; i < 3; i ++){
+  //while(1){
+    sup->Update();
+    sleep(1);
+  }
+
+  car->RemoveComponent("physics");
+  player->RemoveComponent("state");
+
+  for (int i = 0; i < 3; i ++){
+    sup->Update();
+    sleep(1);
+  }
+
+
+*/
 
 
 }

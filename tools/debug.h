@@ -14,6 +14,16 @@ enum DebugLevel{
 
 void DebugLog(DebugLevel lvl, std::string event, std::string message);
 
-}
 
+class Tester
+{
+public:
+  //static void ASSERT_CONT_EXISTS(Manager * manager, ContainerID contID);
+  //static void ASSERT_CONT_EXISTS(Manager * manager, std::string contName);
+
+
+
+};
+
+}
 #endif
