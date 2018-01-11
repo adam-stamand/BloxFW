@@ -19,36 +19,10 @@ public:
   // Name Must be provided upon instantiation
   Container(std::string name): name(name){}
   // Allow destructor to be overriden
-  virtual ~Container(){
-    if (this->manager != NULL){
-      this->RemovedFromManager();
-    }
-    for (auto iter = components.begin(); iter != components.end(); iter++){
-      Component * comp = GetComponent(iter->second);
-      if (comp == NULL){
-        #ifdef BLOX_DEBUG
-        DebugLog(BLOX_ERROR, "Component Failed Destructor", this->Print());
-        #endif
-      }
-      comp->SetParent(NULL);
-    }
-
-    for (auto iter = containers.begin(); iter != containers.end(); iter++){
-      Container * cont = GetContainer(iter->second);
-      if (cont == NULL){
-        #ifdef BLOX_DEBUG
-        DebugLog(BLOX_ERROR, "Container Failed Desctructor", this->Print());
-        #endif
-      }
-      cont->SetParent(NULL);
-    }
-    #ifdef BLOX_DEBUG
-    DebugLog(BLOX_ACTIVITY, "Container Deleted", this->Print());
-    #endif
-  }
+  virtual ~Container();
 
   // Getters
-  ContainerID GetID(); //TODO look into how to handle ID's
+  ContainerID GetID();
   std::string GetName();
   Container * GetParent();
   Manager *   GetManager();
@@ -76,11 +50,14 @@ public:
 
   friend class Manager;
 
-  int RemovedFromManager();
 private:
+  ContainerID GetLocalID(); //TODO look into how to handle ID's
+  ContainerID GetGlobalID(); //TODO look into how to handle ID's
+  int RemovedFromManager();
   int AddedToManager(Manager * manager);
   void SetParent(Container * cont);
-  void SetID(ContainerID contID);
+  void SetLocalID(ContainerID contID);
+  void SetGlobalID(ContainerID contID);
 
   // Publishing and Subscription System for Intra Entity communication
   int AddSubscription(Subscription &sub, std::string subName);
@@ -97,7 +74,8 @@ private:
   Manager * manager = NULL;
   Container * parent = NULL;
   const std::string name;
-  ContainerID id;
+  ContainerID globalID;
+  ContainerID localID;
   labeled_box<MessageID,box<SubscriptionID,Subscription>*> subscriptions;
   labeled_box<ContainerID,Container*> containers;
   labeled_box<ComponentID,Component*> components;
@@ -121,12 +99,13 @@ int Container::RemoveContainer(T contIdentifier){
   if (cont == NULL){
     return NULL;
   }
-
-  cont->RemovedFromManager(); //TODO consider rv
+  if (this->manager != NULL){ // TODO consider added flag
+    cont->RemovedFromManager(); //TODO consider rv
+  }
   cont->SetParent(NULL);
 
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Container Removed", cont->GetName());
+  DebugLog(BLOX_ACTIVITY, "Container Removed", cont->Print());
   #endif
 
   ContainerItem item;
@@ -152,10 +131,13 @@ int Container::RemoveComponent(T compIdentifier){
     return -1;
   }
 
+  if (this->manager != NULL){
+    comp->RemovedFromManager();
+  }
+
   comp->SetParent(NULL);
-  comp->RemovedFromManager();
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Component Removed", comp->GetName());
+  DebugLog(BLOX_ACTIVITY, "Component Removed", comp->Print());
   #endif
 
   ComponentItem item;
@@ -170,7 +152,7 @@ int Container::PublishMessageLocally(Message & msg, T subIdentifier){
   int rv = subscriptions.get(item, subIdentifier);
   if (rv != 0){
     #ifdef BLOX_DEBUG
-    DebugLog(BLOX_ERROR, "Publish Failed; No Subscriptions", GetName());
+    DebugLog(BLOX_ERROR, "Publish Failed; No Subscriptions", Print());
     #endif
     return rv;
   }

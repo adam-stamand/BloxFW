@@ -9,6 +9,7 @@ namespace bx{
 
 enum DebugLevel{
   BLOX_ACTIVITY,
+  BLOX_WARNING,
   BLOX_ERROR
 };
 

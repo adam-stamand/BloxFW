@@ -17,7 +17,15 @@ class Manager : public Container
 public:
   Manager(std::string contName);
   ~Manager(){
-    this->manager = NULL;
+    for (auto iter = containers.begin(); iter != containers.end(); iter++){
+      Container * cont = GetContainer(iter->second);
+      if (cont == NULL){
+        #ifdef BLOX_DEBUG
+        DebugLog(BLOX_ERROR, "Container Failed Destructor", this->Print());
+        #endif
+      }
+      cont->RemovedFromManager();
+    }
   }
 
   // Modify Containers //TODO look into merging getting and removing from container and manager
@@ -44,7 +52,7 @@ private:
   template <typename T1, typename T2>
   int Subscribe(Subscription &sub, T1 subIdentifier, T2 parentIdentifier);
   template <typename T>
-  int Subscribe(Subscription &sub, T subIdentifier){return Subscribe(sub, subIdentifier, this->GetID());}
+  int Subscribe(Subscription &sub, T subIdentifier){return Subscribe(sub, subIdentifier, this->GetGlobalID());}
 
 
   int Unsubscribe(SubscriptionReceipt &rect);
@@ -54,7 +62,7 @@ private:
   template <typename T1, typename T2>
   int Publish(Message & msg, T1 subIdentifier, T2 parentIdentifier);
   template <typename T>
-  int Publish(Message  & msg, T subIdentifier){return Publish(msg, subIdentifier, this->GetID());}
+  int Publish(Message  & msg, T subIdentifier){return Publish(msg, subIdentifier, this->GetGlobalID());}
   // TODO Protext these
   int RegisterContainer(Container * cont);
   int DeregisterContainer(Container * cont);

@@ -6,11 +6,16 @@
 
 using namespace bx;
 
+Component::~Component(){
+  if (this->GetParent() != NULL){
+    this->GetParent()->RemoveComponent(GetName()); //TODO consider adding component ID for this
+  }
+  #ifdef BLOX_DEBUG
+  puts("comp deleted");
+  //DebugLog(BLOX_ACTIVITY, "Component Deleted", Print()); //TODO long prints in desctructor cause seg fault
+  #endif
+} // Allow destructor to be overriden
 
-
-void Component::RemoveFromParent(){
-  this->GetParent()->RemoveComponent(GetName()); //TODO consider adding component ID for this
-}
 
 void Component::SetParent(Container * cont){
   this->parent = cont;
@@ -36,7 +41,12 @@ std::string Component::GetName(){
 
 
 std::string Component::Print(){
-  return "Component: " + this->GetName() + "; Container: " + this->GetParent()->GetName();
+  if (this->GetParent() != NULL){
+    return""; // TODO what the fuck??
+    return "Component: " + this->GetName() + "; Container: " + this->GetParent()->GetName();
+  }else{
+    return "Component: " + this->GetName();
+  }
 }
 
 

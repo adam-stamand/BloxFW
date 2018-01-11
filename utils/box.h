@@ -11,7 +11,6 @@ template <typename ID, typename DATA>
   struct _Element{
     ID id;
     DATA data;
-    _Element(ID id) : id(id){}
     _Element(DATA data) : data(data){}
     _Element(){}
   };
@@ -22,7 +21,6 @@ class box
 {
 public:
   box(){}
-  ~box(){}
 
   typedef _Element<ID,DATA> Element;
 
@@ -34,7 +32,6 @@ public:
 
 
   size_t  size();
-  void print(); // for debug TODO pass in function pointer that prints single element
 
 private:
   std::vector<DATA> vec;
@@ -76,6 +73,7 @@ int box<ID,DATA>::remove(Element &item){
   if (iter == occupants.end()){
     return -1;
   }
+  item.data = vec.at(item.id);
   occupants.erase(iter);
   return 0;
 }
@@ -85,13 +83,6 @@ size_t box<ID,DATA>::size(){
   return occupants.size();
 }
 
-template <typename ID, typename DATA>
-void box<ID,DATA>::print(){
-  printf("Box size = %d\n", vec.size());
-  for (unsigned int i = 0; i < vec.size(); i++){
-    printf("Element %d valid: %d\n", i, vec.at(i).valid);
-  }
-}
 
 
 } //end namespace

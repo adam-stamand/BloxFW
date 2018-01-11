@@ -12,8 +12,7 @@ struct _Item{
   ID id;
   std::string name;
   DATA data;
-  _Item(DATA data, std::string name):
-  name(name), data(data){};
+  _Item(DATA data):data(data){};
   _Item(){};
 };
 
@@ -29,9 +28,9 @@ public:
 
 
 
-  int     add(Item &item);
+  int     add(Item &item, std::string name);
   template <typename T>
-  int     remove(Item &item, T identifier); 
+  int     remove(Item &item, T identifier);
   template <typename T>
   int     get(Item &item, T identifier);
 
@@ -58,19 +57,20 @@ int labeled_box<ID,DATA>::get(Item &item, T identifier){
     return rv;
   }
 
-  Element elem(iter->second);
+  Element elem;
+  elem.id = iter->second;
   items.get(elem);
 
   item.data = elem.data;
   item.name = iter->first;
-  item.id = iter->second;
+  item.id = elem.id;
   return 0;
 }
 
 
 template <typename ID, typename DATA>
-int labeled_box<ID,DATA>::add(Item &item){
-  auto iter = labelMap.find(item.name); // Prevent duplicates
+int labeled_box<ID,DATA>::add(Item &item, std::string name){
+  auto iter = labelMap.find(name); // Prevent duplicates
   if (iter != labelMap.end()){
     return -1;
   };
@@ -78,6 +78,7 @@ int labeled_box<ID,DATA>::add(Item &item){
   Element elem(item.data);
   items.add(elem);
   item.id = elem.id;
+  item.name = name;
   labelMap.insert(std::pair<std::string,ID>(item.name, item.id));
   return 0;
 }
@@ -93,7 +94,8 @@ int labeled_box<ID,DATA>::remove(Item &item, T identifier){
     return rv;
   }
 
-  Element elem(iter->second);
+  Element elem;
+  elem.id = iter->second;
   items.remove(elem);
   labelMap.erase(iter);
 
