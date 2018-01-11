@@ -157,7 +157,7 @@ public:
   TestComponent(int num, std::string name) : Component(name) {testValue = num;}
 
   void UserInit(){
-    SubscribeToContainerMessage(&TestComponent::Test, GetName(), std::to_string(testValue-1));
+    //SubscribeToContainerMessage(&TestComponent::Test, GetName(), std::to_string(testValue-1));
     SubscribeToContainerMessage(&TestComponent::BIG, "BIG", 0);
   }
 
@@ -285,12 +285,12 @@ int main(void){
   Entity * player = new Entity("Player");
 
 
-  BuildTree(3, sup);
+  BuildTree(1, sup);
 
-  sup->Update();
+  //sup->Update();
 
   DestroyTree(sup);
-  sup->Update();
+  //sup->Update();
 
 /*
   sup->AddContainer(characters);

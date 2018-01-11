@@ -94,12 +94,14 @@ int Container::RemoveContainer(T contIdentifier){
   if (cont == NULL){
     return NULL;
   }
+
   cont->SetParent(NULL);
   cont->RemovedFromManager();
 
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Container Removed", cont->Print());
+  DebugLog(BLOX_ACTIVITY, "Container Removed", cont->GetName());
   #endif
+
   ContainerItem item;
   return this->containers.remove(item, contIdentifier);
 }
