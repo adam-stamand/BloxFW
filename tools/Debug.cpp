@@ -1,4 +1,4 @@
-#include "debug.h"
+#include "Debug.h"
 
 
 using namespace bx;
@@ -13,6 +13,9 @@ void bx::DebugLog(DebugLevel lvl, std::string event, std::string message){
     case BLOX_ERROR:
       std::cout << "ERROR:\t";
       errors++;
+      break;
+      
+    default:
       break;
   }
 

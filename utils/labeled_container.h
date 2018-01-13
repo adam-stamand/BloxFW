@@ -1,7 +1,7 @@
-#ifndef LABELED_BOX_H
-#define LABELED_BOX_H
+#ifndef LABELED_CONT_H
+#define LABELED_CONT_H
 
-#include "box.h"
+#include "container.h"
 #include <assert.h>
 #include <map>
 
@@ -17,7 +17,7 @@ struct _Item{
 };
 
 template <typename ID, typename DATA>
-class labeled_box
+class labeled_container
 {
 
 public:
@@ -42,7 +42,7 @@ private:
   int searchIdentifier(typename std::map<std::string, ID>::iterator &iter, ID itemID);
   int searchIdentifier(typename  std::map<std::string, ID>::iterator &iter, std::string itemName);
   std::map<std::string, ID> labelMap;
-  box<ID,DATA> items;
+  container<ID,DATA> items;
 };
 
 
@@ -50,7 +50,7 @@ private:
 
 template <typename ID, typename DATA>
 template <typename T>
-int labeled_box<ID,DATA>::get(Item &item, T identifier){
+int labeled_container<ID,DATA>::get(Item &item, T identifier){
   auto iter = labelMap.begin();
   int rv = searchIdentifier(iter, identifier);
   if (rv != 0){
@@ -69,7 +69,7 @@ int labeled_box<ID,DATA>::get(Item &item, T identifier){
 
 
 template <typename ID, typename DATA>
-int labeled_box<ID,DATA>::add(Item &item, std::string name){
+int labeled_container<ID,DATA>::add(Item &item, std::string name){
   auto iter = labelMap.find(name); // Prevent duplicates
   if (iter != labelMap.end()){
     return -1;
@@ -86,7 +86,7 @@ int labeled_box<ID,DATA>::add(Item &item, std::string name){
 
 template <typename ID, typename DATA>
 template <typename T>
-int labeled_box<ID,DATA>::remove(Item &item, T identifier){
+int labeled_container<ID,DATA>::remove(Item &item, T identifier){
   // Find the item by index
   auto iter = labelMap.begin();
   int rv = searchIdentifier(iter, identifier);
@@ -108,7 +108,7 @@ int labeled_box<ID,DATA>::remove(Item &item, T identifier){
 
 
 template <typename ID, typename DATA>
-int labeled_box<ID,DATA>::searchIdentifier(typename std::map<std::string, ID>::iterator &iter, std::string itemName){
+int labeled_container<ID,DATA>::searchIdentifier(typename std::map<std::string, ID>::iterator &iter, std::string itemName){
   iter = labelMap.find(itemName);
   if (iter == labelMap.end()){
     return -1;
@@ -118,7 +118,7 @@ int labeled_box<ID,DATA>::searchIdentifier(typename std::map<std::string, ID>::i
 
 
 template <typename ID, typename DATA>
-int labeled_box<ID,DATA>::searchIdentifier(typename std::map<std::string, ID>::iterator &iter, ID itemID){
+int labeled_container<ID,DATA>::searchIdentifier(typename std::map<std::string, ID>::iterator &iter, ID itemID){
   for (iter = labelMap.begin(); iter != labelMap.end(); iter++){
     if (iter->second == itemID){
       break;

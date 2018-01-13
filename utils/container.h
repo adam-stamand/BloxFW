@@ -1,5 +1,5 @@
-#ifndef BOX_H
-#define BOX_H
+#ifndef CONTAINER_H
+#define CONTAINER_H
 
 #include <vector>
 #include <list>
@@ -17,10 +17,10 @@ template <typename ID, typename DATA>
 
 
 template <typename ID, typename DATA>
-class box
+class container
 {
 public:
-  box(){}
+  container(){}
 
   typedef _Element<ID,DATA> Element;
 
@@ -45,7 +45,7 @@ private:
 
 
 template <typename ID, typename DATA>
-int box<ID,DATA>::add(Element &item){
+int container<ID,DATA>::add(Element &item){
 
   if (vacancies.size() > 0){ // Fill in vacancy if one exists
     item.id = vacancies.front();
@@ -60,13 +60,13 @@ int box<ID,DATA>::add(Element &item){
 }
 
 template <typename ID, typename DATA>
-int box<ID,DATA>::get(Element &item){
+int container<ID,DATA>::get(Element &item){
   item.data = vec.at(item.id);
   return 0;
 }
 
 template <typename ID, typename DATA>
-int box<ID,DATA>::remove(Element &item){
+int container<ID,DATA>::remove(Element &item){
   vacancies.push_back(item.id);
 
   auto iter = occupants.find(item.id);
@@ -79,7 +79,7 @@ int box<ID,DATA>::remove(Element &item){
 }
 
 template <typename ID, typename DATA>
-size_t box<ID,DATA>::size(){
+size_t container<ID,DATA>::size(){
   return occupants.size();
 }
 
