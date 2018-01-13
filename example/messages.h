@@ -2,7 +2,7 @@
 #define MESSAGES_H
 
 
-#include "../utils/types.h"
+#include "../BloxFW/utils/types.h"
 
 class TestMessage : public bx::Message
 {
