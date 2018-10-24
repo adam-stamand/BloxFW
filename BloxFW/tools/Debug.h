@@ -5,7 +5,7 @@
 
 namespace bx{
 
-//#define BLOX_DEBUG
+#define BLOX_DEBUG
 
 enum DebugLevel{
   BLOX_ACTIVITY,

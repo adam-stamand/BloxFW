@@ -31,6 +31,11 @@ public:
 
 
 
+  // Iterators for contained boxes and blocks
+  std::map<std::string, BoxID>::const_iterator managedBoxes_begin() { return managedBoxes.begin(); }
+  std::map<std::string, BoxID>::const_iterator managedBoxes_end() { return managedBoxes.end(); }
+
+
 
 private:
 

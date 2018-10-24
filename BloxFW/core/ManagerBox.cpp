@@ -6,7 +6,7 @@ using namespace bx;
 
 ManagerBox::ManagerBox(std::string boxName) : Box (boxName){
   this->AddToManager(this);
-
+  printf("Still: manager %s\n", this->manager->GetName().c_str());
   #ifdef BLOX_DEBUG
   DebugLog(BLOX_ACTIVITY, "ManagerBox Created", this->Print());
   #endif
@@ -36,6 +36,7 @@ int ManagerBox::Unsubscribe(SubscriptionReceipt &rect){
 
 int ManagerBox::RegisterBox(Box * box){
   BoxItem item(box);
+  printf("registering %s\n", box->GetName().c_str());
   int rv = this->managedBoxes.add(item, box->GetName());
   if (rv != 0){
     #ifdef BLOX_DEBUG

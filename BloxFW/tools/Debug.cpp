@@ -1,3 +1,4 @@
+#include <string>
 #include "Debug.h"
 
 
@@ -19,7 +20,7 @@ void bx::DebugLog(DebugLevel lvl, std::string event, std::string message){
       break;
   }
 
-  std::cout << "--" + event + "--\t" + message << std::endl;
+ std::cout << "--" + event + "--\t" + message << std::endl;
 }
 
 uint32_t bx::errors = 0;

@@ -53,7 +53,7 @@ std::string Block::Print(){
 void Block::AddToManager(ManagerBox * manager){
   assert(manager != NULL);
   this->manager = manager;
-  this->UserInit();
+  this->Init();
 }
 
 

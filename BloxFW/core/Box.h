@@ -27,6 +27,8 @@ public:
   ManagerBox *   GetManagerBox();
   std::string Print(); // for debug
 
+protected:
+
   // Add/Get/Remove Blocks
   int AddBlocks(std::vector<Block*> blocks); //TODO look into return value
   template <typename T>
@@ -51,6 +53,7 @@ public:
 
 
   friend class ManagerBox;
+  friend class Block;
 
 private:
   BoxID GetLocalID(); //TODO look into how to handle ID's

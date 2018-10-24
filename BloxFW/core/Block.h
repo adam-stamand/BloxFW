@@ -36,14 +36,14 @@ public:
   template <class T1, class T2, class T3>
   ReceiptID SubscribeMessage(void (T1::*f)(Message &), T2 msgIdentifier, T3 boxIdentifier); //TODO shitty interface
   template <class T1, class T2>
-  ReceiptID SubscribeMessage(void (T1::*f)(Message &), T2 msgIdentifier) {return SubscribeToBoxMessage(f, msgIdentifier, this->GetBoxID());}
+  ReceiptID SubscribeMessage(void (T1::*f)(Message &), T2 msgIdentifier) {return SubscribeMessage(f, msgIdentifier, this->GetBoxID());}
 
   int UnsubscribeMessage(ReceiptID rectID);
 
   template <class T1, class T2>
   int PublishMessage(Message &msg, T1 msgIdentifier, T2 boxIdentifier);
   template <class T>
-  int PublishMessage(Message &msg, T msgIdentifier){return PublishMessageToBox(msgIdentifier, this->GetBoxID());}
+  int PublishMessage(Message &msg, T msgIdentifier){return PublishMessage(msg, msgIdentifier, this->GetBoxID());}
 
 
 
@@ -57,7 +57,7 @@ private:
 
   void RemoveFromManager();
   BlockID GetBoxID(); //TODO fix hack maybe?
-  virtual void UserInit(){}; // User can define behavior when component is added to ManagerBox
+  virtual void Init(){}; // User can define behavior when component is added to ManagerBox
   void AddToManager(ManagerBox * manager);
   void SetBox(Box * cont);
 

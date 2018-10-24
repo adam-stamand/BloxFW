@@ -86,6 +86,7 @@ int Box::AddToManager(ManagerBox * manager){
   assert(manager != NULL);
   this->manager = manager;
   this->manager->RegisterBox(this);
+  printf("Addting to manager: manager %s\n", this->manager->GetName().c_str());
 
   for (auto iter = boxes.begin(); iter != boxes.end(); iter++){
     Box * box = GetBox(iter->second);
@@ -160,6 +161,7 @@ int Box::AddBox(Box * box){
   assert(box != NULL);
   int rv;
   box->SetBox(this);
+  printf("adding box %s to %s %d\n", box->GetName().c_str(), this->GetName().c_str(), this->manager);
   if (this->manager != NULL){
     rv = box->AddToManager(this->manager);
     if (rv != 0){
