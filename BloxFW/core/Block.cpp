@@ -1,5 +1,5 @@
-#include "Block.h"
-#include "ManagerBox.h"
+#include <BloxFW/core/Block.h>
+#include <BloxFW/core/ManagerBox.h>
 #include <stdio.h>
 #include <iostream>
 
@@ -22,6 +22,7 @@ void Block::SetBox(Box * box){
 }
 
 BlockID Block::GetBoxID(){
+  assert(this->box != NULL); //TODO replace assert with BLOX_ASSERT
   return this->box->GetID();
 }
 
@@ -42,16 +43,15 @@ std::string Block::GetName(){
 
 std::string Block::Print(){
   if (this->GetBox() != NULL){
-    return "Block: " + this->GetName(); //TODO wtf??
     return "Block: " + this->GetName() + "; Box: " + this->GetBox()->GetName();
   }else{
-    return "Block: " + this->GetName();
+    return "Block: " + this->GetName() + "; Box: Orphan";
   }
 }
 
 
 void Block::AddToManager(ManagerBox * manager){
-  assert(manager != NULL);
+  assert(manager != NULL); //TODO can blocks be without managers?
   this->manager = manager;
   this->Init();
 }

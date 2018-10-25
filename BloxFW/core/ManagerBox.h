@@ -1,12 +1,12 @@
 #ifndef MANAGERBOX_H
 #define MANAGERBOX_H
 
-#include "Box.h"
-#include "Block.h"
-#include "../utils/labeled_container.h"
-#include "../utils/types.h"
+#include <BloxFW/core/Box.h>
+#include <BloxFW/core/Block.h>
+#include <BloxFW/utils/labeled_container.h>
+#include <BloxFW/utils/types.h>
 #include <assert.h>
-#include "../tools/Debug.h"
+#include <BloxFW/tools/Debug.h>
 
 namespace bx{
 

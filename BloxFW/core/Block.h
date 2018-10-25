@@ -6,8 +6,8 @@
 #include <string>
 #include <functional>
 #include <assert.h>
-#include "../tools/Debug.h"
-#include "../utils/types.h"
+#include <BloxFW/tools/Debug.h>
+#include <BloxFW/utils/types.h>
 
 
 
@@ -29,7 +29,7 @@ public:
   // Getters
   std::string GetName();
   Box * GetBox();
-  ManagerBox * GetManagerBox();
+  ManagerBox * GetManagerBox(); // TODO Rename to GetManager(); 
   std::string Print(); // for debug
 
   // Subscription and Publishing System //TODO how to return error value??
@@ -55,12 +55,13 @@ public:
 
 private:
 
-  void RemoveFromManager();
-  BlockID GetBoxID(); //TODO fix hack maybe?
   virtual void Init(){}; // User can define behavior when component is added to ManagerBox
+  void SetBox(Box * cont); //rename to AddToBox
   void AddToManager(ManagerBox * manager);
-  void SetBox(Box * cont);
+  // RemoveFromBox();
+  void RemoveFromManager();// TODO add RemoveFromBox()
 
+  BlockID GetBoxID(); //TODO fix hack maybe? Why does this exist?
 
   // Message Helpers //TODO FIx this shit
   int SubscribeHelper(Subscription &sub, std::string msgIdentifier, std::string boxIdentifier);

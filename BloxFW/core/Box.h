@@ -6,10 +6,10 @@
 #include <map>
 #include <assert.h>
 
-#include "Block.h"
-#include "../utils/types.h"
-#include "../utils/labeled_container.h"
-#include "../tools/Debug.h"
+#include <BloxFW/core/Block.h>
+#include <BloxFW/utils/types.h>
+#include <BloxFW/utils/labeled_container.h>
+#include <BloxFW/tools/Debug.h>
 
 namespace bx{
 

@@ -1,7 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include "labeled_container.h"
+#include <BloxFW/utils/labeled_container.h>
 #include <vector>
 
 namespace bx

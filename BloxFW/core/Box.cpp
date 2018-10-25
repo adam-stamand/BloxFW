@@ -1,5 +1,5 @@
-#include "Box.h"
-#include "ManagerBox.h"
+#include <BloxFW/core/Box.h>
+#include <BloxFW/core/ManagerBox.h>
 
 using namespace bx;
 

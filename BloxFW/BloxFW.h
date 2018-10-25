@@ -1,8 +1,8 @@
 #ifndef BLOX_H
 #define BLOX_H
 
-#include "core/Block.h"
-#include "core/Box.h"
-#include "core/ManagerBox.h"
+#include <BloxFW/core/Block.h>
+#include <BloxFW/core/Box.h>
+#include <BloxFW/core/ManagerBox.h>
 
 #endif

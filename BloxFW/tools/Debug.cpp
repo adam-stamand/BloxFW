@@ -1,5 +1,5 @@
 #include <string>
-#include "Debug.h"
+#include <BloxFW/tools/Debug.h>
 
 
 using namespace bx;
