@@ -1,44 +1,32 @@
 #include <BloxFW/core/Box.h>
-#include <BloxFW/core/ManagerBox.h>
+#include <BloxFW/core/Manager.h>
 
 using namespace bx;
 
 
-BoxID Box::GetGlobalID(){
-  return this->globalID;
-}
-
-BoxID Box::GetLocalID(){
-  return this->localID;
-}
-
-BoxID Box::GetID(){
-  return this->GetGlobalID();
-}
-
-
 Box::~Box(){
   if (this->GetBox() != NULL){
-    this->GetBox()->RemoveBox(this->GetLocalID());
+    // Remove self from parent box
+    this->GetBox()->RemoveBox(this->GetName());
   }
   for (auto iter = blocks.begin(); iter != blocks.end(); iter++){
-    Block * block = GetBlock(iter->second);
+    Block * block = iter->second;
     if (block == NULL){
       #ifdef BLOX_DEBUG
       DebugLog(BLOX_ERROR, "Block Failed Destructor", this->Print());
       #endif
     }
-    block->SetBox(NULL);
+    block->AddToBox(NULL);
   }
 
   for (auto iter = boxes.begin(); iter != boxes.end(); iter++){
-    Box * box = GetBox(iter->second);
+    Box * box = iter->second;
     if (box == NULL){
       #ifdef BLOX_DEBUG
       DebugLog(BLOX_ERROR, "Box Failed Destructor", this->Print());
       #endif
     }
-    box->SetBox(NULL);
+    box->AddToBox(NULL);
   }
   #ifdef BLOX_DEBUG
   puts("box deleted");
@@ -47,61 +35,64 @@ Box::~Box(){
 }
 
 
-void Box::SetGlobalID(BoxID boxID){
-  this->globalID = boxID;
-}
-
-void Box::SetLocalID(BoxID boxID){
-  this->localID = boxID;
-}
-
 Box * Box::GetBox(){
   return this->box;
 }
 
-void Box::SetBox(Box * box){
+void Box::AddToBox(Box * box){
   this->box = box;
 }
 
+std::string Box::GetBoxName(){
+  assert(this->box != NULL); //TODO replace assert with BLOX_ASSERT
+  return this->box->GetName();
+}
 
 std::string Box::GetName() {
   return this->name;
 }
 
 
-ManagerBox * Box::GetManagerBox(){
+Manager * Box::GetManager(){
   return this->manager;
 }
 
 
 std::string Box::Print(){
+  std::string box_str, man_str;
   if (this->GetBox() != NULL){
-    return "Box: " + this->GetName() + "; Parent Box: " + (this->GetBox()->GetName());
-  }else{
-    return "Box: " + this->GetName();
+    box_str = this->GetBox()->GetName();
   }
+
+  if (this->GetManager() != NULL){
+    man_str = this->GetManager()->GetName();
+  }
+
+    return "Name: " + this->GetName() + "; Parent Box: " + box_str + "; Manager: " + man_str;
 }
 
-int Box::AddToManager(ManagerBox * manager){
+int Box::AddToManager(Manager * manager){
   assert(manager != NULL);
   this->manager = manager;
   this->manager->RegisterBox(this);
-  printf("Addting to manager: manager %s\n", this->manager->GetName().c_str());
+  #ifdef BLOX_DEBUG
+  DebugLog(BLOX_ACTIVITY, "Box +> Manager", this->Print());
+  #endif
 
   for (auto iter = boxes.begin(); iter != boxes.end(); iter++){
-    Box * box = GetBox(iter->second);
+    Box * box = iter->second;
     if (box == NULL){
       #ifdef BLOX_DEBUG
       DebugLog(BLOX_ERROR, "Box Failed Init", this->Print());
       #endif
       return -1;
     }
-    box->SetBox(this);
+    box->AddToBox(this);
     box->AddToManager(manager);
   }
 
   for (auto iter = blocks.begin(); iter != blocks.end(); iter++){
-    Block * block = GetBlock(iter->second);
+    Block * block = iter->second;
     if (block == NULL){
       #ifdef BLOX_DEBUG
       DebugLog(BLOX_ERROR, "Block Failed Init", this->Print());
@@ -109,7 +100,7 @@ int Box::AddToManager(ManagerBox * manager){
       return -1;
     }
 
-    block->SetBox(this);
+    block->AddToBox(this);
     block->AddToManager(manager);
   }
   return 0;
@@ -120,7 +111,7 @@ int Box::RemoveFromManager(){
   int rv = 0;
 
   for (auto iter = blocks.begin(); iter != blocks.end(); iter++){
-    Block * block = GetBlock(iter->second);
+    Block * block = iter->second;
     if (block == NULL){
       #ifdef BLOX_DEBUG
       DebugLog(BLOX_ERROR, "Block Failed UnInit", this->Print());
@@ -131,7 +122,7 @@ int Box::RemoveFromManager(){
   }
 
   for (auto iter = boxes.begin(); iter != boxes.end(); iter++){
-    Box * box = GetBox(iter->second);
+    Box * box = iter->second;
     if (box == NULL){
       #ifdef BLOX_DEBUG
       DebugLog(BLOX_ERROR, "Box Failed UnInit", this->Print());
@@ -141,11 +132,13 @@ int Box::RemoveFromManager(){
     box->RemoveFromManager();
   }
 
+  MessageElem elem;
+  container<SubscriptionID,Subscription>* sub_map;
   for (auto iter = subscriptions.begin(); iter != subscriptions.end(); iter++){
-    MessageItem item;
-    item.id = iter->second;
-    rv = subscriptions.remove(item, item.id); //TODO check rv
-    delete(item.data);
+    sub_map = iter->second;
+    elem.id = iter->first;
+    rv = subscriptions.remove(elem); //TODO check rv
+    delete(sub_map);
   }
 
   this->manager->DeregisterBox(this);
@@ -160,8 +153,17 @@ int Box::RemoveFromManager(){
 int Box::AddBox(Box * box){
   assert(box != NULL);
   int rv;
-  box->SetBox(this);
-  printf("adding box %s to %s %d\n", box->GetName().c_str(), this->GetName().c_str(), this->manager);
+  box->AddToBox(this);
+  BoxElem elem;
+  elem.id = box->GetName();
+  elem.data = box;
+  rv = boxes.add(elem);
+  if (rv != 0){
+    DebugLog(BLOX_ERROR, "Failed Add Box", this->Print());
+    return rv;
+  }
+
+
   if (this->manager != NULL){
     rv = box->AddToManager(this->manager);
     if (rv != 0){
@@ -169,19 +171,9 @@ int Box::AddBox(Box * box){
     }
   }
 
-  BoxItem item(box);
-  rv = boxes.add(item, box->GetName());
-  if (rv != 0){
-    DebugLog(BLOX_ERROR, "Failed Add Box", this->Print());
-    return rv;
-  }
-
-  box->SetLocalID(item.id);
-
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Box Added", box->Print());
+  DebugLog(BLOX_ACTIVITY, "Box +> Box", box->Print());
   #endif
-
   return 0;
 }
 
@@ -194,92 +186,175 @@ int Box::AddBlocks(std::vector<Block*> newBlocks){
     assert(block != NULL);
     int rv;
 
-    block->SetBox(this);
-    if (this->manager != NULL){
-      block->AddToManager(this->manager);
-    }
-
-
-    BlockItem item(block);
-    rv = blocks.add(item, block->GetName());
+    block->AddToBox(this);
+    BlockElem elem;
+    elem.data = block;
+    elem.id = block->GetName();
+    rv = blocks.add(elem);
     if (rv != 0){
       DebugLog(BLOX_ERROR, "Failed Add Block", this->Print());
       return rv;
     }
-    // TODO consider returning ID or assiging block ID
+
+
+    if (this->manager != NULL){
+      block->AddToManager(this->manager);
+    }
     #ifdef BLOX_DEBUG
-    DebugLog(BLOX_ACTIVITY, "Block Added", block->Print());
+    DebugLog(BLOX_ACTIVITY, "Block +> Box", block->Print());
     #endif
-
   }
+
   return 0;
 }
 
-
-int Box::AddSubscription(Subscription &sub, SubscriptionID subID){ // TODO does this need to exist
-  MessageItem item;
-  int rv = subscriptions.get(item, subID);
-  if (rv != 0){
-    DebugLog(BLOX_ERROR, "Failed Add Subscription", this->Print());
-    return rv; //TODO
-  }
-  SubscriptionElem elem;
-  elem.data = sub;
-  item.data->add(elem);
-
-  sub.subID = elem.id;
-  sub.msgID = item.id;
-  #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : "  + item.name);
-  #endif
-  return 0;
-}
 
 
 int Box::AddSubscription(Subscription &sub, std::string msgName){
-  MessageItem item;
-  int rv = subscriptions.get(item, msgName);
+  static uint32_t subID_counter = 0; //TODO fix using U32 and wrapareound
+  MessageElem elem;
+  SubscriptionElem elem_sub;
+
+  elem.id = msgName;
+  int rv = subscriptions.get(elem);
   if (rv != 0){
-    item.data = new(container<SubscriptionID,Subscription>);
-    rv = subscriptions.add(item, msgName);
+    elem.data = new(container<SubscriptionID,Subscription>);
+    rv = subscriptions.add(elem);
     if (rv != 0){
       DebugLog(BLOX_ERROR, "Failed Add Subscription", this->Print());
       return rv; //TODO
     }
   }
-  SubscriptionElem elem;
-  elem.data = sub;
-  item.data->add(elem);
 
-  sub.subID = elem.id;
-  sub.msgID = item.id;
+  elem_sub.data = sub;
+  elem_sub.id = subID_counter;
+  elem.data->add(elem_sub);
+  sub.subID = subID_counter;
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : "  + item.name);
+  DebugLog(BLOX_ACTIVITY, "Subscription Added", sub.subscriber->Print() + " subscribed to " + this->Print() + " : "  + elem.id);
   #endif
+
+  subID_counter++;
   return 0;
 }
 
 
 
-int Box::RemoveSubscription(SubscriptionReceipt &rect){
-  MessageItem item;
-  int rv = subscriptions.get(item, rect.msgID);
+int Box::RemoveSubscription(const SubscriptionReceipt &rect){
+  MessageElem elem;
+  SubscriptionElem elem_sub;
+
+  elem.id = rect.msgName;
+  int rv = subscriptions.get(elem);
   if (rv != 0){
     #ifdef BLOX_DEBUG
     DebugLog(BLOX_ERROR, "Subscription Failed Remove", this->Print());
     #endif
     return -1;
   }
-  if (item.data->size() <= 1){
-    subscriptions.remove(item, item.id); // Remove entire box if only one elemnt left
-    delete(item.data);
+
+  elem_sub.id = rect.subID;
+  elem.data->remove(elem_sub); // TODO check return value
+
+  if (elem.data->size() <= 1){
+    subscriptions.remove(elem); // Remove entire container if only one elemnt left
+    delete(elem.data);
+  }
+
+  #ifdef BLOX_DEBUG
+  DebugLog(BLOX_ACTIVITY, "Subscription Removed", elem_sub.data.subscriber->Print() + " removed from " + this->Print() + " : "  + elem.id);
+  #endif
+  return 0;
+}
+
+
+
+Box * Box::GetBox(std::string boxIdentifier){
+  BoxElem elem;
+  elem.id = boxIdentifier;
+  int rv = this->boxes.get(elem);
+  if (rv != 0){
+    return NULL;
+  }
+  return elem.data;
+}
+
+int Box::RemoveBox(std::string boxIdentifier){
+  Box * box = GetBox(boxIdentifier);
+  if (box == NULL){
+    return -1;
+  }
+  if (this->manager != NULL){ // TODO consider added flag
+    box->RemoveFromManager(); //TODO consider rv
+  }
+  
+  #ifdef BLOX_DEBUG
+  DebugLog(BLOX_ACTIVITY, "Box Removed", box->Print());
+  #endif
+  box->AddToBox(NULL);
+
+
+  BoxElem elem;
+  elem.id = boxIdentifier;
+  return this->boxes.remove(elem);
+}
+
+Block * Box::GetBlock(std::string blockIdentifier){
+  BlockElem elem;
+  elem.id = blockIdentifier;
+  int rv = this->blocks.get(elem);
+  if (rv != 0){
+    DebugLog(BLOX_ERROR, "Failed Get Block", this->Print());
+    return NULL;
+  }
+  return elem.data;
+}
+
+
+int Box::RemoveBlock(std::string blockIdentifier){
+  BlockElem elem;
+  elem.id = blockIdentifier;
+  int rv = this->blocks.remove(elem);
+  if (rv != 0){
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ERROR, "Block Failed Removed", elem.data->Print());
+    #endif
     return rv;
   }
-  SubscriptionElem elem;
-  elem.id = rect.subID;
-  item.data->remove(elem); // TODO check return value
+  if (elem.data == NULL){
+    return -1;
+  }
+
   #ifdef BLOX_DEBUG
-  DebugLog(BLOX_ACTIVITY, "Subscription Removed", elem.data.subscriber->Print() + " removed from " + this->Print() + " : "  + item.name);
+  DebugLog(BLOX_ACTIVITY, "Block Removed", elem.data->Print());
   #endif
+  elem.data->AddToBox(NULL);
+
+
+  if (this->manager != NULL){
+    elem.data->RemoveFromManager();
+  }
+
+  return rv;
+}
+
+
+
+int Box::PublishMessage(Message & msg, std::string subIdentifier){
+  MessageElem elem;
+  elem.id = subIdentifier;
+  int rv = subscriptions.get(elem);
+  if (rv != 0){
+    #ifdef BLOX_DEBUG
+    DebugLog(BLOX_ERROR, "Publish Failed; No Subscriptions", Print());
+    #endif
+    return rv;
+  }
+
+  container<SubscriptionID,Subscription>* subs = elem.data;
+
+  for (auto iter = subs->begin(); iter!=subs->end(); iter++){
+    iter->second.callback(msg);
+  }
   return 0;
 }

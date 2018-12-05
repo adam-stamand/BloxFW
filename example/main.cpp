@@ -1,4 +1,4 @@
-#include "../BloxFW/core/ManagerBox.h"
+#include <BloxFW/BloxFW.h>
 #include "messages.h"
 #include <stdio.h>
 #include <unistd.h>
@@ -14,9 +14,9 @@ class TestBlock : public Block
 public:
   TestBlock(int num, std::string name) : Block(name) {testValue = num;}
 
-  void UserInit(){
+  void Init(){
     SubscribeMessage(&TestBlock::Test, GetName(), std::to_string(testValue));
-    SubscribeMessage(&TestBlock::BIG, "BIG", 0);
+    SubscribeMessage(&TestBlock::BIG, "BIG", std::to_string(0));
   }
 
   void Update(){
@@ -33,12 +33,12 @@ public:
   void TestBIG(){
     TestMessage test;
     test.test = TEST_VALUE;
-    PublishMessage(test, "BIG", 0);
+    PublishMessage(test, "BIG", std::to_string(0));
   }
 
 
   void TestPublish(){
-    if (testValue == 0) return; // Edge Case
+    if (testValue == 1) return; // Edge Case
     TestMessage test;
     int rv = PublishMessage(test, GetName(), std::to_string(testValue-1));
     if (rv != 0) return;
@@ -65,12 +65,12 @@ public:
   void Update(){
 
     for (auto iter = box_begin(); iter != box_end(); iter++){
-      TestBox *testBox = static_cast<TestBox*>(GetBox(iter->second));
+      TestBox *testBox = static_cast<TestBox*>(iter->second);
       testBox->Update();
     }
 
     for (auto iter = block_begin(); iter != block_end(); iter++){
-      Block * block = GetBlock(iter->second);
+      Block * block = iter->second;
       TestBlock *testBlock = static_cast<TestBlock*>(block);
       testBlock->Update();
     }
@@ -78,20 +78,20 @@ public:
 };
 
 
-class TestManager : public ManagerBox
+class TestManager : public Manager
 {
 
 public:
-  TestManager(std::string name) : ManagerBox(name){}
+  TestManager(std::string name) : Manager(name){}
   virtual ~TestManager(){}
 
   void Update(){
     TestBox *testBox;
     for (auto iter = box_begin(); iter != box_end(); iter++){
-      testBox = static_cast<TestBox*>(GetBox(iter->second));
+      testBox = static_cast<TestBox*>(iter->second);
       testBox->Update();
     }
-    TestBlock * temp = static_cast<TestBlock*>(testBox->GetBlock(0));
+    TestBlock * temp = static_cast<TestBlock*>(testBox->GetBlock(std::to_string(0))); //TODO replace hardcoded
     temp->TestBIG();
   }
 
@@ -132,13 +132,15 @@ void BuildTreeBackwards(int num, Box * box){
 }
 
 void DestroyTree(Box * box){
-  for (auto iter = box->box_begin(); iter != box->box_end(); iter++){
-    TestBox * testBox = static_cast<TestBox*>(box->GetBox(iter->second));
+  for (auto iter = box->box_begin(); iter != box->box_end(); ){
+    TestBox * testBox = static_cast<TestBox*>(iter->second);
+    iter++;
     DestroyTree(testBox);
   }
 
-  for (auto iter = box->block_begin(); iter != box->block_end(); iter++){
-    TestBlock * testBlock = static_cast<TestBlock*>(box->GetBlock(iter->second));
+  for (auto iter = box->block_begin(); iter != box->block_end();){
+    TestBlock * testBlock = static_cast<TestBlock*>(iter->second);
+    iter++;
     delete(testBlock);
   }
   delete(box);
@@ -150,10 +152,10 @@ void DestroyTreeBackwards(Box * box){
   std::vector<TestBlock*> blocks;
 
   for (auto iter = box->box_begin(); iter != box->box_end(); iter++){
-    boxes.push_back(static_cast<TestBox*>(box->GetBox(iter->second)));
+    boxes.push_back(static_cast<TestBox*>(iter->second));
   }
   for (auto iter = box->block_begin(); iter != box->block_end(); iter++){
-    blocks.push_back(static_cast<TestBlock*>(box->GetBlock(iter->second)));
+    blocks.push_back(static_cast<TestBlock*>(iter->second));
   }
 
   delete(box);
@@ -177,8 +179,8 @@ void Test1(int levels){
         "--------------------Test 1---------------------------\n"\
         "-----------------------------------------------------\n"\
        );
-  global_cnt = 0;
-  TestManager * sup = new TestManager("supervisor");
+  global_cnt = 1;
+  TestManager * sup = new TestManager("0");
   BuildTree(levels, sup);
   sup->Update();
   DestroyTree(sup);
@@ -191,7 +193,7 @@ void Test2(int levels){
         "-----------------------------------------------------\n"\
        );
   global_cnt = 0;
-  TestManager * sup = new TestManager("supervisor");
+  TestManager * sup = new TestManager("0");
   BuildTreeBackwards(levels, sup);
   sup->Update();
   DestroyTreeBackwards(sup);
@@ -230,10 +232,10 @@ void Test4(int levels){
 
 int main(void){
 
-  Test1(5);
-  Test2(5);
-  Test3(5);
-  Test4(5);
+  Test1(1);
+  //Test2(5);
+  //Test3(5);
+  //Test4(5);
   printf("Errors:%d\n", errors);
 
 }

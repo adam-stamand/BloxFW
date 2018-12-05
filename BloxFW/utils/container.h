@@ -27,16 +27,12 @@ public:
   int add(Element &item);
   int remove(Element &item);
   int get(Element &item);
-  typename std::map<ID,ID>::const_iterator end(){return occupants.end();}
-  typename std::map<ID,ID>::const_iterator begin(){return occupants.begin();}
-
-
+  typename std::map<ID,DATA>::const_iterator end(){return map.end();}
+  typename std::map<ID,DATA>::const_iterator begin(){return map.begin();}
   size_t  size();
 
 private:
-  std::vector<DATA> vec;
-  std::map<ID, ID> occupants; //TODO fix this; don't use map
-  std::list<ID> vacancies;
+  std::map<ID, DATA> map;
 };
 
 
@@ -46,41 +42,34 @@ private:
 
 template <typename ID, typename DATA>
 int container<ID,DATA>::add(Element &item){
-
-  if (vacancies.size() > 0){ // Fill in vacancy if one exists
-    item.id = vacancies.front();
-    vec.at(item.id) = item.data;
-    vacancies.pop_front();
-  }else{
-    item.id = vec.size();
-    vec.push_back(item.data);
-  }
-  occupants.insert(std::pair<ID,ID>(item.id, item.id));
+  map.insert(std::pair<ID,DATA>(item.id, item.data));
   return 0;
 }
 
 template <typename ID, typename DATA>
 int container<ID,DATA>::get(Element &item){
-  item.data = vec.at(item.id);
+  auto iter = map.find(item.id);
+  if (iter == map.end()){
+    return -1;
+  }
+  item.data = iter->second;
   return 0;
 }
 
 template <typename ID, typename DATA>
 int container<ID,DATA>::remove(Element &item){
-  vacancies.push_back(item.id);
-
-  auto iter = occupants.find(item.id);
-  if (iter == occupants.end()){
+  auto iter = map.find(item.id);
+  if (iter == map.end()){
     return -1;
   }
-  item.data = vec.at(item.id);
-  occupants.erase(iter);
+  item.data = iter->second;
+  map.erase(iter);
   return 0;
 }
 
 template <typename ID, typename DATA>
 size_t container<ID,DATA>::size(){
-  return occupants.size();
+  return map.size();
 }
 
 

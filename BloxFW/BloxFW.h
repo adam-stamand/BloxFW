@@ -3,6 +3,6 @@
 
 #include <BloxFW/core/Block.h>
 #include <BloxFW/core/Box.h>
-#include <BloxFW/core/ManagerBox.h>
+#include <BloxFW/core/Manager.h>
 
 #endif

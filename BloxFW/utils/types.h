@@ -29,20 +29,21 @@ typedef std::function<void(Message &)> MessageFunction;
 struct Subscription{
   Block * subscriber;
   MessageFunction callback;
-
   SubscriptionID subID;
-  MessageID msgID;
   Box * box;
 };
 
 struct SubscriptionReceipt{
-  MessageID msgID;
+  std::string msgName;
   SubscriptionID subID;
   Box * box;
 }; // TODO put recipte inside subscipritons
 
 typedef _Element<SubscriptionID,Subscription> SubscriptionElem;
 typedef _Element<ReceiptID, SubscriptionReceipt> ReceiptElem;
+typedef _Element<std::string, Box*> BoxElem;
+typedef _Element<std::string, container<SubscriptionID,Subscription>*> MessageElem;
+typedef _Element<std::string, Block*> BlockElem;
 typedef _Item<MessageID, container<SubscriptionID,Subscription>*> MessageItem;
 typedef _Item<BoxID, Box*> BoxItem;
 typedef _Item<BlockID, Block*> BlockItem;

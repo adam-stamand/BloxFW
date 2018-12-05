@@ -1,6 +1,6 @@
-
+INC=-I../
 CXX = g++
-CXXFLAGS = -Wall -std=c++11 -g
+CXXFLAGS = -Wall -std=c++11 -g $(INC)
 
 src = $(wildcard ../BloxFW/tools/*.cpp) \
 	$(wildcard *.cpp) \
@@ -9,7 +9,7 @@ src = $(wildcard ../BloxFW/tools/*.cpp) \
 obj = $(src:.cpp=.o)
 
 Blox: $(obj)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS)  -o $@ $^
 
 
 clean:
